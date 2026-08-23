@@ -1,7 +1,8 @@
 # journalfig
 
-Publication-ready matplotlib themes for **Nature**, **APS** (PRB/PRL), and **Elsevier** (Acta Materialia,
-JNCS). Import once, and retarget a figure to a different journal by changing one string.
+Publication-ready matplotlib themes for **Nature**, **APS** (PRB/PRL), **Elsevier** (Acta Materialia,
+JNCS), **IOP**, **AIP**, **ACS**, **RSC**, **IEEE**, **PLOS**, **Wiley**, **PNAS**, and **Science**.
+Import once, and retarget a figure to a different journal by changing one string.
 
 Every number in the themes is traceable to a publisher document. Nothing is guessed; the two values that
 had to be derived are marked as such, and [`journalfig.source`][journalfig.source] reports when each
