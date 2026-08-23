@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "journalfig"
 dynamic = ["version"]
-description = "Publication-ready matplotlib themes for Nature, APS, and Elsevier journals"
+description = "Publication-ready matplotlib themes for twelve scientific publishers"
 readme = "README.md"
 requires-python = ">=3.12"
 license = "MIT"
@@ -44,7 +44,7 @@ journalfig = "journalfig._cli:main"
 Homepage = "https://github.com/Atilaac/journalfig"
 Repository = "https://github.com/Atilaac/journalfig"
 Issues = "https://github.com/Atilaac/journalfig/issues"
-Changelog = "https://github.com/Atilaac/journalfig/blob/main/CHANGELOG.md"
+Changelog = "https://github.com/Atilaac/journalfig/releases"
 
 [project.optional-dependencies]
 # pillow arrives with matplotlib, but the TIFF-compression test imports it directly, so it is declared.
@@ -73,7 +73,7 @@ packages = ["src/journalfig"]
 [tool.hatch.build.targets.sdist]
 # The gallery and the executed notebook are ~4.7 MB of binaries; they belong in the repository, not in
 # every download of the package.
-include = ["src", "tests", "conftest.py", "README.md", "CHANGELOG.md", "LICENSE", "CITATION.cff"]
+include = ["src", "tests", "conftest.py", "README.md", "LICENSE", "CITATION.cff"]
 
 [tool.ruff]
 line-length = 120

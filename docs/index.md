@@ -52,7 +52,7 @@ two-column geometry (7.0 in text width, 0.25 in gutter) and are the only inferre
 
 ## Colours
 
-Okabe–Ito, identical across all three themes so retargeting never changes colours. This follows APS's
+Okabe–Ito, identical across every theme so retargeting never changes colours. This follows APS's
 explicit requirement to use accessible palettes and to distinguish curves by line style as well as hue, so
 figures survive greyscale printing.
 

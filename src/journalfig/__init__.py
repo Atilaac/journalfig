@@ -1,4 +1,4 @@
-"""Publication-ready matplotlib themes for Nature, APS, and Elsevier journals.
+"""Publication-ready matplotlib themes for twelve scientific publishers.
 
 Each theme encodes the figure requirements the publisher actually documents -- column widths, font
 sizes, panel label conventions, minimum line weights, and accepted file formats -- so a figure can be

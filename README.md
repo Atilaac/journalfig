@@ -5,7 +5,7 @@
 [![Python](https://img.shields.io/pypi/pyversions/journalfig.svg)](https://pypi.org/project/journalfig/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-Publication-ready matplotlib themes for **Nature**, **APS** (PRB/PRL), and **Elsevier** (Acta Materialia, JNCS, etc). Import once, and retarget a figure to a different journal by changing one string.
+Publication-ready matplotlib themes for **Nature**, **APS** (PRB/PRL), **Elsevier** (Acta Materialia, JNCS), **IOP**, **AIP**, **ACS**, **RSC**, **IEEE**, **PLOS**, **Wiley**, **PNAS**, and **Science**. Import once, and retarget a figure to a different journal by changing one string.
 
 Every number in the themes is traceable to a publisher document — see [Sources](#sources). Nothing is guessed; the two values that had to be derived are marked as such.
 
@@ -169,7 +169,7 @@ looks lopsided even though the figure is correct. Saved files were never affecte
 
 ## Six things worth knowing
 
-**Nature caps text at 7 pt; APS requires ≥ 2 mm lettering, which forces 9 pt.** These are irreconcilable, which is exactly why there are three themes rather than one. The APS size is not a guess — Times New Roman digits measure 1.94 mm at 8 pt (fails) and 2.18 mm at 9 pt (passes), measured with `TextPath`.
+**Nature caps text at 7 pt; APS requires ≥ 2 mm lettering, which forces 9 pt.** These are irreconcilable, which is exactly why there is a theme per publisher rather than one. The APS size is not a guess — Times New Roman digits measure 1.94 mm at 8 pt (fails) and 2.18 mm at 9 pt (passes), measured with `TextPath`.
 
 **A missing font is substituted silently, and that is the easiest way to submit a non-compliant figure.** Ask for Arial on a machine that has no Arial and matplotlib draws DejaVu Sans instead — the figure looks fine, and nothing in matplotlib treats it as an error. This bites when you develop on a laptop that has the font and render on a cluster that does not. `jf.check()` reports it as a `font` violation, and `jf.fonts()` shows what each face resolved to:
 
@@ -216,7 +216,7 @@ glyphs so it renders identically on a machine without your fonts, at the cost of
 
 ## Colours
 
-Okabe–Ito, identical across all three themes so retargeting never changes colours. This follows APS's explicit requirement to use accessible palettes and to distinguish curves by line style as well as hue, so figures survive greyscale printing.
+Okabe–Ito, identical across every theme so retargeting never changes colours. This follows APS's explicit requirement to use accessible palettes and to distinguish curves by line style as well as hue, so figures survive greyscale printing.
 
 ```
 #0072B2 blue    #D55E00 vermillion   #009E73 green    #CC79A7 purple

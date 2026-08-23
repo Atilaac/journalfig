@@ -1,10 +1,13 @@
-# Changelog
+# Release notes for v0.1.0
 
-All notable changes to this project are documented here. The format follows
-[Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project adheres to
-[Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+Seed for the first GitHub Release. Release Drafter assembles later releases from merged pull request
+titles, but it has no pull request history to work from for this one -- everything below arrived in the
+initial commit -- so this file carries it across. Paste it into the v0.1.0 release body and delete the
+file; from v0.2.0 onward the draft release is the changelog and there is no file to maintain.
 
-## [Unreleased]
+**Not yet reviewed against the current package.** These entries were written when journalfig shipped three
+themes on Python 3.10-3.13. It now ships twelve and requires 3.12, and the two notes below about the
+initial version and about dropping 3.10/3.11 contradict each other. Reconcile before publishing.
 
 ### Added
 
@@ -109,11 +112,8 @@ All notable changes to this project are documented here. The format follows
 - `pypdf` from the development dependencies -- it was never imported; the PDF width test parses
   `/MediaBox` directly.
 
-## [0.1.0] - unreleased
+## Initial version
 
 Initial version: Nature, APS, and Elsevier themes; exact column-width figure factories (`figure`,
 `subplots`, `mosaic`, `gridspec`); `check()` compliance reporting; `fonts()` substitution reporting; and
 `save()` writing each publisher's accepted formats.
-
-[Unreleased]: https://github.com/Atilaac/journalfig/compare/v0.1.0...HEAD
-[0.1.0]: https://github.com/Atilaac/journalfig/releases/tag/v0.1.0
