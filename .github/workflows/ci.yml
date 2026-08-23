@@ -1,0 +1,156 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -e ".[dev]"
+      - run: ruff check src/ tests/ demo.py
+      - run: ruff format --check --diff src/ tests/ demo.py
+
+  test:
+    # Font resolution and figure-size rounding are both platform-dependent, and they are exactly what
+    # this package exists to get right -- so the matrix spans all three operating systems rather than
+    # trusting Linux alone. No journal typeface is installed on the runners on purpose: the suite has
+    # to pass on a bare machine, which is the situation an HPC user is in.
+    name: ${{ matrix.os }} / py${{ matrix.python-version }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        python-version: ["3.12", "3.14"]
+        include:
+          - os: ubuntu-latest
+            python-version: "3.13"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+      - run: pip install -e ".[test]"
+      # Not pytest-cov: the JournalFigWarning filter in pyproject.toml makes pytest import the package
+      # while parsing config, before pytest-cov starts measuring, which under-reports by ~27 points.
+      - run: coverage run -m pytest -q
+      - run: coverage report --show-missing --fail-under=90
+
+  demo:
+    # End-to-end smoke test: the gallery script exercises save(), check(), mosaic() and panel_labels()
+    # together, which no unit test does.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -e ".[test]"
+      - run: python demo.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: gallery
+          path: gallery/
+
+  minimum-versions:
+    # pyproject claims matplotlib>=3.8 and python>=3.12. Every other job installs the newest of both,
+    # so without this the floor is an untested assertion. matplotlib 3.8 is the last series that both
+    # satisfies that claim and has cp312 wheels -- it never supported 3.13 -- so this job is what pins
+    # the two floors together. Note that no runner has LaTeX, so the usetex tests skip here; see the
+    # matplotlib 3.10 note in the README about APS and usetex.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -e ".[test]" "matplotlib==3.8.*" "numpy<2"
+      - run: python -c "import matplotlib; assert matplotlib.__version__.startswith('3.8'), matplotlib.__version__"
+      - run: pytest -q
+
+  visual:
+    # Image comparison, on one pinned combination only. Baselines are sensitive to the matplotlib
+    # version -- antialiasing and layout shift between releases -- so running this across the matrix
+    # would produce failures that say nothing about this package. The other jobs still execute these
+    # tests without --mpl, which catches exceptions everywhere but compares no pixels.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      # Pinned exactly, not "3.10.*": a patch release that changes antialiasing would fail this job
+      # at a moment unrelated to any change here. Bump it and regenerate the baselines together.
+      - run: pip install -e ".[test]" "matplotlib==3.10.9"
+      # The wheel bundles FreeType 2.6.1, which is what the baselines were rendered against. The tests
+      # skip the pixel comparison on any other build, so without this assert a wheel that started
+      # shipping a different FreeType would turn this job green by skipping everything.
+      - name: Assert the FreeType the baselines were rendered with
+        run: |
+          python - <<'PY'
+          from matplotlib import ft2font
+          expected = "2.6.1"
+          actual = ft2font.__freetype_version__
+          assert actual == expected, f"baselines need FreeType {expected}, this wheel has {actual}"
+          print("FreeType", actual)
+          PY
+      - run: pytest --mpl tests/test_visual.py -q
+      - if: failure()
+        run: pytest --mpl --mpl-generate-summary=html tests/test_visual.py -q || true
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: visual-diff
+          path: /tmp/pytest-mpl-results/
+
+  notebook:
+    # The examples ship executed, so they go stale silently as the API moves. --nbval-lax runs every cell and
+    # fails on an exception; it deliberately does not diff stored outputs, which are figure PNGs that never
+    # reproduce byte-for-byte across platforms. nbval runs the cells in a Jupyter kernel, so the strict
+    # JournalFigWarning filter in pyproject.toml does not reach them.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -e ".[test]"
+      - run: pytest --nbval-lax examples/
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install build twine
+      - run: python -m build
+      - run: twine check dist/*
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -e ".[docs]"
+      - run: mkdocs build --strict

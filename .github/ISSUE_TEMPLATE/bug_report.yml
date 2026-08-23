@@ -1,0 +1,45 @@
+name: Bug report
+description: A figure comes out wrong, or the package errors
+labels: [bug]
+body:
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What you expected the figure or call to do, and what it did instead.
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproducer
+    attributes:
+      label: Minimal reproducer
+      description: The shortest script that shows the problem.
+      render: python
+      placeholder: |
+        import journalfig as jf
+        jf.use("nature")
+        fig, ax = jf.subplots("nature", width="single")
+        ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: fonts
+    attributes:
+      label: Font report
+      description: >
+        Output of `jf.fonts()`. A silently substituted typeface is the most common cause of a figure
+        that looks subtly wrong, so this is worth pasting even when the issue seems unrelated.
+      render: text
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: >
+        Output of `python -c "import matplotlib, journalfig, sys;
+        print(sys.version, matplotlib.__version__, journalfig.__version__, matplotlib.get_backend())"`
+      render: text
+    validations:
+      required: true
