@@ -1,0 +1,23 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+title: "journalfig: publication-ready matplotlib themes for Nature, APS, and Elsevier journals"
+abstract: >-
+  Matplotlib themes encoding the figure requirements Nature, APS, and Elsevier publish, including column widths, font sizes, panel-label conventions, minimum line weights, and accepted file formats, so a figure can be retargeted between journals by changing one string, with a compliance check that reports violations, including typefaces silently substituted by matplotlib.
+type: software
+authors:
+  - family-names: Atila
+    given-names: Achraf
+    email: achraf.atila@bam.de
+    # Add your ORCID here to make the citation resolvable:
+    orcid: "https://orcid.org/0000-0003-4148-5908"
+repository-code: "https://github.com/Atilaac/journalfig"
+url: "https://github.com/Atilaac/journalfig"
+license: MIT
+version: 0.1.0
+# date-released: YYYY-MM-DD  # fill in when the first release is tagged
+# doi:                        # add the Zenodo DOI once the repository is archived
+keywords:
+  - matplotlib
+  - scientific visualization
+  - publication figures
+  - reproducibility
