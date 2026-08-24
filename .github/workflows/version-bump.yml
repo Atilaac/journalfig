@@ -51,6 +51,7 @@ jobs:
         # Merging fires both push->main (release-drafter.yml) and pull_request->closed (this workflow)
         # at the same moment. Without running the drafter explicitly here, this job can read a draft
         # that predates the merge it was triggered by, and resolve a version one bump behind.
+        id: drafter
         uses: release-drafter/release-drafter@v6
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -60,6 +61,8 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           REPO: ${{ github.repository }}
+          DRAFTED: ${{ steps.drafter.outputs.resolved_version }}
+          DRAFT_ID: ${{ steps.drafter.outputs.id }}
         run: |
           python - <<'PY' >> "$GITHUB_OUTPUT"
           import json, os, re, subprocess, sys
@@ -76,11 +79,15 @@ jobs:
           # fixed major > minor > patch, so `patch` alongside `feature` still resolves to minor. It can
           # only ever raise a bump, never lower one. So the manual labels are resolved here instead, and
           # the draft is corrected afterwards to keep its tag and this tag identical.
-          draft = json.loads(run("gh", "api", f"repos/{repo}/releases",
-                                 "--jq", "[.[] | select(.draft)] | first"))
-          if not draft:
-              sys.exit("::error::No draft release found. Has release-drafter run at least once?")
-          drafted = draft["tag_name"].lstrip("v")
+          #
+          # These come from the release-drafter step's own outputs, not from `gh api`. Reading the draft
+          # back through the API raced its creation, and worse, `gh api --jq` prints *nothing* -- not
+          # "null" -- when the filter matches no draft, so an empty string reached json.loads and the
+          # "no draft found" guard below could never run.
+          drafted = os.environ["DRAFTED"].strip()
+          draft_id = os.environ["DRAFT_ID"].strip()
+          if not drafted:
+              sys.exit("::error::Release Drafter resolved no version -- has it run on this repository?")
 
           # The base is the newest real tag rather than the newest published release: a tag can exist
           # without a release, and the version must never go backwards because a release was missing.
@@ -120,7 +127,7 @@ jobs:
               sys.exit(f"::error::resolved version is not X.Y.Z: {version!r}")
 
           print(f"version={version}")
-          print(f"draft_id={draft['id']}")
+          print(f"draft_id={draft_id}")
           print(f"drafted={drafted}")
           PY
 
