@@ -3,9 +3,15 @@ name: Docs
 # Publishes the MkDocs site to GitHub Pages. ci.yml already builds it with --strict on every pull
 # request, which is the gate; this only deploys what main already proved buildable.
 #
-# One-time setup: Settings -> Pages -> Source: "GitHub Actions". Without it the deploy step fails with
-# a 404, because there is no Pages site to deploy to.
-#   gh api -X POST repos/Atilaac/journalfig/pages -f 'build_type=workflow'
+# One-time setup, already done: Settings -> Pages -> Source must be "GitHub Actions". Left on the default
+# "Deploy from a branch (main /docs)" it is not merely inert -- GitHub's own pages-build-deployment runs
+# Jekyll over the raw markdown in docs/ on every push to main and races this workflow for the deployment
+# lock, so the published site flips between the two and this workflow intermittently fails with
+# "Deployment request failed ... due to in progress deployment".
+#   gh api -X PUT repos/Atilaac/journalfig/pages -f 'build_type=workflow'   # POST only if no site exists
+#
+# The site is served at https://aatila.com/journalfig/ -- aatila.com is the account-level Pages domain, so
+# the site_url in mkdocs.yml (atilaac.github.io) 301s here. Deliberate; canonical links point at the 301.
 
 on:
   push:
