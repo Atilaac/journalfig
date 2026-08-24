@@ -30,7 +30,7 @@ def _clean_rcparams():
 
 @pytest.mark.parametrize("journal", jf.JOURNALS)
 def test_committed_overlay_matches_the_generator(journal):
-    committed = (_STYLE_DIR / f"{journal}.mplstyle").read_text()
+    committed = (_STYLE_DIR / f"{journal}.mplstyle").read_text(encoding="utf-8")
     assert committed == overlay_text(journal), (
         f"{journal}.mplstyle is stale or hand-edited; run `python -m journalfig._stylegen`"
     )

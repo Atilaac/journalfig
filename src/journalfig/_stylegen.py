@@ -190,7 +190,7 @@ def write_all() -> list[Path]:
     written = []
     for key in SPECS:
         path = _STYLE_DIR / f"{key}.mplstyle"
-        path.write_text(overlay_text(key))
+        path.write_text(overlay_text(key), encoding="utf-8")
         written.append(path)
     return written
 

@@ -20,8 +20,8 @@ pre-commit install
 pytest -q                                   # tests/ plus every docstring Example: block
 coverage run -m pytest -q && coverage report # coverage (see the note below -- not pytest-cov)
 pytest tests/test_journalfig.py -x -k mosaic  # one test
-ruff check src/ tests/ demo.py
-ruff format --check --diff src/ tests/ demo.py
+ruff check src/ tests/ demo.py conftest.py examples/
+ruff format --check --diff src/ tests/ demo.py conftest.py examples/
 pytest --mpl tests/test_visual.py           # image comparison against tests/baseline/
 mkdocs serve                                # live docs preview
 pytest --nbval-lax examples/                # execute every example notebook
@@ -53,7 +53,10 @@ pixels, which silently destroys the exact column width the package exists to gua
 (`figure`, `subplots`, `mosaic`, `gridspec`) records its requested size through `_pin_size`; a new one
 must too. This is invisible under the `Agg` backend used in tests, so no test will catch its absence.
 
-**A CHANGELOG entry** under `## [Unreleased]`.
+**A pull request title a user can read.** There is no `CHANGELOG.md`; the draft GitHub Release is the
+changelog, and it is assembled from merged pull request titles. Write the title as the changelog line it
+will become — what changed for someone using the package, not what was done to the code. Add
+`skip-changelog` to keep a pull request out of the notes entirely.
 
 ## Changing what a figure looks like
 
@@ -116,20 +119,104 @@ measuring; every module-level statement then counts as uncovered and the total r
 
 ## Adding a journal
 
-Add a `JournalSpec` to `SPECS`, its aliases to `ALIASES`, a `Source` to `SOURCES`, and
-`src/journalfig/styles/<key>.mplstyle`. `register()` globs the style directory and `JOURNALS` follows
-`SPECS`, so nothing else needs touching, and the tests parametrised over `jf.JOURNALS` will pick it up
-automatically.
+Three edits to `src/journalfig/_specs.py` — a `JournalSpec` in `SPECS`, a `Source` in `SOURCES`, and the
+journal's aliases in `ALIASES` — then run the two generators:
+
+```bash
+python -m journalfig._stylegen    # writes src/journalfig/styles/<key>.mplstyle
+python -m journalfig._docsgen     # rewrites the generated half of docs/specifications.md
+```
+
+Do not hand-write the stylesheet. It is generated from `SPECS`, and `tests/test_stylegen.py` fails if the
+committed file and the generator disagree; `tests/test_docsgen.py` does the same for the specifications
+page. `register()` globs the style directory and `JOURNALS` follows `SPECS`, so everything parametrised
+over `jf.JOURNALS` picks the new key up automatically.
+
+Three things the generators cannot reach:
+
+- **Image baselines.** Three tests in `tests/test_visual.py` are parametrised over `jf.JOURNALS`, so a new
+  key silently creates three tests with no baseline to compare against. They pass locally, because the
+  comparison only runs under `--mpl`, and then fail the `visual` CI job with "image not found". Generate
+  them from the pinned environment described in *Changing what a figure looks like* below, and commit only
+  the new files — if the regenerated run also changes an existing baseline, stop and find out why.
+- **`tests/rcparams_reference.json`**, regenerated with `python tests/test_rcparams.py`, so the new theme's
+  resolved rcParams are snapshotted.
+- **The theme count in the one-line description**, which is written out as a word in `pyproject.toml`,
+  `mkdocs.yml`, `CITATION.cff`, `README.md` and the `_specs.py` and `__init__.py` module docstrings.
+
+**No test can tell you whether the numbers are right.** The suite verifies an entry is complete and
+self-consistent, never that it matches the publisher's document. That stays a human review against the
+cited source, which is why the `Source` and its `retrieved` date are mandatory.
+
+## Versioning
+
+The project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html) with one adaptation that
+matters more here than the specification text does: **the public surface is the rendered figure, not only
+the function signatures.** A user depends on `jf.subplots("nature", width="single")` producing an 89 mm
+figure with 7 pt labels exactly as much as on it returning `(fig, ax)`. A number moving is therefore an
+interface change, even though no signature moved and every test still passes.
+
+The package is on 0.x, where SemVer leaves MAJOR without meaning. Until 1.0 the mapping is: anything that
+would be MAJOR becomes a MINOR bump (0.1.0 → 0.2.0), and anything that would be MINOR or PATCH becomes a
+PATCH bump (0.2.0 → 0.2.1). The table gives both, so it does not need rewriting at 1.0.
+
+| Change | After 1.0 | Now (0.x) | Label |
+| --- | --- | --- | --- |
+| Remove or rename a public function, parameter, theme key, or alias | MAJOR | MINOR | `breaking` |
+| Change a default that moves every figure and cannot be argued back | MAJOR | MINOR | `breaking` |
+| Raise the Python or matplotlib floor | MAJOR | MINOR | `breaking` |
+| Tighten the `vector` rule so a figure that passed `check()` now fails | MAJOR | MINOR | `breaking` |
+| **A publisher-stated number moves** — width, font size, minimum, dpi floor, accepted format | MINOR | MINOR | `specification` |
+| Add a journal, an alias, a function, a parameter, or a `check()` rule traceable to a publisher document | MINOR | PATCH | `journal`, `feature` |
+| Fix a bug without moving a number | PATCH | PATCH | `bug` |
+| Docs, comments, tests, CI, packaging, or a `retrieved` date refreshed on numbers that did not change | PATCH | PATCH | `documentation`, `maintenance` |
+
+`.github/release-drafter.yml` encodes this table, so the labels on the merged pull requests resolve the
+next version by themselves; the draft release shows the number it arrived at.
+
+### A specification change is never a patch
+
+It is the one rule worth stating on its own, because it reads backwards. Correcting a width that
+`journalfig` had *wrong* feels like a bug fix, and SemVer would call it a patch. It is a MINOR bump here
+regardless of cause, for two reasons:
+
+- Every figure a user renders with that theme changes size or type, silently, on a `pip install -U`.
+- `check()` validates against the spec, so a figure that passed can start failing — and a paper repository
+  running `journalfig check` in CI goes red for a reason that has nothing to do with anything it changed.
+
+`~=0.2.0` has to be enough to hold a figure still. That only works if a moved number is never hidden in
+the patch digit. Name the journal and the old → new value in the pull request title, and cite the
+publisher document in the diff as always.
+
+The reverse also holds: refreshing a `retrieved` date after checking a document that turned out unchanged
+is a patch. Nothing moved.
 
 ## Releasing
 
-Maintainers only. Bump `__version__` in `src/journalfig/__init__.py` (the single source of truth --
-`pyproject.toml` reads it), move the `Unreleased` CHANGELOG section under the new version, then tag:
+Maintainers only. There is no `CHANGELOG.md` — [Release
+Drafter](https://github.com/release-drafter/release-drafter) keeps a draft GitHub Release up to date as
+pull requests merge, and that draft is the changelog.
 
-```bash
-git tag -a v0.2.0 -m "v0.2.0"
-git push origin v0.2.0
-```
+1. Open the draft release and read it. It is assembled from pull request titles, so fix anything that
+   reads as an implementation note rather than a user-facing change, and check the version it resolved to
+   against the table above.
+2. Set `__version__` in `src/journalfig/__init__.py` to that number. It is the single source of truth;
+   `pyproject.toml` reads it through `[tool.hatch.version]`. Commit that alone.
+3. Tag and push:
 
-The publish workflow verifies the tag matches `__version__`, builds, and uploads to PyPI through Trusted
+   ```bash
+   git tag -a v0.2.0 -m "v0.2.0"
+   git push origin v0.2.0
+   ```
+
+4. Publish the draft release against the new tag.
+
+`publish.yml` verifies the tag matches `__version__`, builds, and uploads to PyPI through Trusted
 Publishing. No API token is stored in the repository.
+
+**`__version__` never moves in an ordinary pull request.** It is bumped once, in the release commit.
+Bumping it per-change would conflict on every parallel branch, and the tag check in `publish.yml` means a
+half-bumped `main` fails the release rather than shipping the wrong number.
+
+`packaging/journalfigs/` carries its own hard-coded version and is released separately. Bump it only when
+the alias package itself changes — not when `journalfig.__version__` moves.

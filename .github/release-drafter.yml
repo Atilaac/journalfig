@@ -1,0 +1,97 @@
+# Release Drafter keeps a draft GitHub Release up to date as pull requests merge into main. The draft
+# *is* the changelog for this project -- there is no CHANGELOG.md -- so a merged PR's title is what a
+# user will read, and it should say what changed rather than what was done to the code.
+#
+# Categories are ordered by what a reader of this package needs to know first. "Specification changes"
+# is top because a moved width or font size resizes every figure a user renders and can flip a
+# `journalfig check` verdict, which no other kind of change here does.
+#
+# The labels below must exist in the repository before the drafter can apply them. One-time setup:
+#
+#   gh label create breaking      --color d73a4a --description "Removes or changes existing behaviour"
+#   gh label create specification --color 5319e7 --description "A publisher-stated number changed"
+#   gh label create journal       --color 0e8a16 --description "Adds or extends a journal theme"
+#   gh label create feature       --color a2eeef --description "New capability"
+#   gh label create bug           --color d73a4a --description "Something behaved incorrectly"
+#   gh label create documentation --color 0075ca --description "Docs, docstrings, examples"
+#   gh label create maintenance   --color cfd3d7 --description "CI, packaging, tests, tooling"
+#   gh label create dependencies  --color 0366d6 --description "Dependency bumps"
+#   gh label create skip-changelog --color ededed --description "Keep out of the release notes"
+#
+# `bug`, `documentation`, `enhancement` and `dependencies` are GitHub defaults and already exist;
+# `enhancement` is accepted as a synonym of `feature` for that reason. `specification` exists if the
+# spec-correction issue template has been used.
+
+name-template: "v$RESOLVED_VERSION"
+tag-template: "v$RESOLVED_VERSION"
+
+categories:
+  - title: "📐 Specification changes"
+    labels: [specification]
+  - title: "⚠️ Breaking changes"
+    labels: [breaking]
+  - title: "📰 Journals"
+    labels: [journal]
+  - title: "✨ Added"
+    labels: [feature, enhancement]
+  - title: "🐛 Fixed"
+    labels: [bug]
+  - title: "📚 Documentation"
+    labels: [documentation]
+  - title: "🔧 Maintenance"
+    labels: [maintenance]
+  - title: "⬆️ Dependencies"
+    labels: [dependencies]
+
+exclude-labels: [skip-changelog]
+
+# The resolver encodes the versioning rules in CONTRIBUTING.md, under the 0.x mapping the project is
+# currently on: anything that would be a major bump after 1.0 is a minor bump now, so nothing is listed
+# under `major`. A specification change is minor at minimum and never a patch -- users pin against it.
+version-resolver:
+  minor:
+    labels: [breaking, specification, journal, feature, enhancement]
+  patch:
+    labels: [bug, documentation, maintenance, dependencies]
+  default: patch
+
+change-template: "- $TITLE (#$NUMBER) @$AUTHOR"
+change-title-escapes: '\<*_&'
+no-changes-template: "- No user-facing changes."
+
+template: |
+  $CHANGES
+
+  **Full diff**: https://github.com/Atilaac/journalfig/compare/$PREVIOUS_TAG...v$RESOLVED_VERSION
+
+# Applied on every pull request so the draft is categorised and the next version resolves without
+# anyone remembering to label by hand. A label added manually is never removed by this.
+autolabeler:
+  - label: specification
+    files:
+      - "src/journalfig/_specs.py"
+      - "src/journalfig/styles/*.mplstyle"
+      - "docs/specifications.md"
+  - label: documentation
+    files:
+      - "docs/**/*"
+      - "*.md"
+      - "examples/**/*"
+      - "mkdocs.yml"
+  - label: maintenance
+    files:
+      - ".github/**/*"
+      - "tests/**/*"
+      - "packaging/**/*"
+      - ".pre-commit-config.yaml"
+  - label: dependencies
+    files:
+      - "pyproject.toml"
+  - label: bug
+    branch: ["/^fix\\/.+/"]
+    title: ["/^fix(\\(.+\\))?:/i"]
+  - label: feature
+    branch: ["/^feat\\/.+/"]
+    title: ["/^feat(\\(.+\\))?:/i"]
+  - label: breaking
+    title: ["/^[a-z]+(\\(.+\\))?!:/i"]

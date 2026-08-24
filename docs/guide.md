@@ -68,10 +68,9 @@ fig, axs = jf.subplots("elsevier", 1, 2, width="double", width_ratios=[3, 1])
 
 !!! warning "Two things bite in multi-panel figures"
     **Height still defaults to the golden ratio of the width**, which is far too short once there is more
-    than one row — pass `ratio=` or `height_mm=` deliberately. And **`fig.colorbar` reserves
-    `fraction=0.15` of its parent panel's width**, so on a wide spanning panel it leaves a large gap
-    between the panel and a bar sized by its aspect ratio rather than by that fraction;
-    `fraction=0.05, pad=0.02` is a reasonable starting point.
+    than one row — pass `ratio=` or `height_mm=` deliberately. And **a colour bar in an interior column
+    lands in the wrong place**, for the reason in [Colour bars in a mosaic](#colour-bars-in-a-mosaic)
+    above; `fraction` does not fix it, because `aspect` sets the bar's width regardless.
 
 ## Using it in a notebook
 
@@ -90,7 +89,7 @@ lopsided even though the figure is correct. Saved files were never affected: `jf
 ## Six things worth knowing
 
 **Nature caps text at 7 pt; APS requires ≥ 2 mm lettering, which forces 9 pt.** These are irreconcilable,
-which is exactly why there are three themes rather than one. The APS size is not a guess — Times New Roman
+which is exactly why there is a theme per publisher rather than one. The APS size is not a guess — Times New Roman
 digits measure 1.94 mm at 8 pt (fails) and 2.18 mm at 9 pt (passes), measured with `TextPath`.
 
 **A missing font is substituted silently, and that is the easiest way to submit a non-compliant figure.**

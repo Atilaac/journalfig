@@ -16,7 +16,7 @@ from journalfig._docsgen import _DOCS_PAGE, SENTINEL, read_tail, specifications_
 
 
 def test_committed_page_matches_the_generator():
-    committed = _DOCS_PAGE.read_text()
+    committed = _DOCS_PAGE.read_text(encoding="utf-8")
     assert committed == specifications_text(read_tail()), (
         "docs/specifications.md is stale; run `python -m journalfig._docsgen`"
     )
@@ -24,7 +24,7 @@ def test_committed_page_matches_the_generator():
 
 @pytest.mark.parametrize("journal", jf.JOURNALS)
 def test_every_journal_appears_with_its_numbers(journal):
-    page = _DOCS_PAGE.read_text()
+    page = _DOCS_PAGE.read_text(encoding="utf-8")
     spec = jf.get_spec(journal)
     assert f"### {spec.name} (`{journal}`)" in page
     assert f"{spec.widths_mm['single']:.1f} mm" in page
@@ -36,7 +36,7 @@ def test_every_journal_appears_with_its_numbers(journal):
 
 @pytest.mark.parametrize("journal", jf.JOURNALS)
 def test_every_journal_cites_its_source(journal):
-    page = _DOCS_PAGE.read_text()
+    page = _DOCS_PAGE.read_text(encoding="utf-8")
     source = jf.source(journal)
     assert source.url in page
     assert source.retrieved in page
@@ -53,14 +53,14 @@ def test_hand_written_prose_survives_regeneration():
 def test_regenerating_without_the_sentinel_refuses(tmp_path):
     """Without the marker the generator cannot tell prose from output, so it must not guess."""
     page = tmp_path / "specifications.md"
-    page.write_text("# Specifications\n\nno marker here\n")
+    page.write_text("# Specifications\n\nno marker here\n", encoding="utf-8")
     with pytest.raises(ValueError, match="refusing to regenerate"):
         read_tail(page)
 
 
 def test_jpg_and_jpeg_are_not_listed_twice():
     """Elsevier's submission formats carry both spellings; a reader wants one."""
-    page = _DOCS_PAGE.read_text()
+    page = _DOCS_PAGE.read_text(encoding="utf-8")
     accepted = next(line for line in page.splitlines() if line.startswith("- **Accepted") and "JPEG" in line)
     assert accepted.count("JPEG") == 1
     assert "JPG" not in accepted

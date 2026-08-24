@@ -1,0 +1,32 @@
+name: Release Drafter
+
+# Keeps one draft GitHub Release up to date as pull requests merge, and labels each pull request so the
+# draft categorises itself. The draft is this project's changelog; publishing it is a step in the release
+# checklist in CONTRIBUTING.md. Configuration lives in .github/release-drafter.yml.
+
+on:
+  push:
+    branches: [main]
+  # pull_request_target, not pull_request, so the autolabeler has a write token on pull requests from
+  # forks. It is safe here only because this workflow never checks out or executes the pull request's
+  # code -- it calls the GitHub API and nothing else. Do not add a checkout step.
+  pull_request_target:
+    types: [opened, reopened, synchronize]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  draft:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # to create and update the draft release
+      pull-requests: write # to apply autolabels
+    steps:
+      - uses: release-drafter/release-drafter@v6
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

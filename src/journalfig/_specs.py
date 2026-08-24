@@ -1,4 +1,4 @@
-"""Published figure specifications for Nature, APS, and Elsevier journals.
+"""Published figure specifications for twelve scientific publishers.
 
 Every number here is traceable to a publisher document; see ``SOURCES``. Values that had to be derived
 rather than read off a spec sheet are marked ``DERIVED`` in the comment next to them.

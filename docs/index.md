@@ -1,7 +1,8 @@
 # journalfig
 
-Publication-ready matplotlib themes for **Nature**, **APS** (PRB/PRL), and **Elsevier** (Acta Materialia,
-JNCS). Import once, and retarget a figure to a different journal by changing one string.
+Publication-ready matplotlib themes for **Nature**, **APS** (PRB/PRL), **Elsevier** (Acta Materialia,
+JNCS), **IOP**, **AIP**, **ACS**, **RSC**, **IEEE**, **PLOS**, **Wiley**, **PNAS**, and **Science**.
+Import once, and retarget a figure to a different journal by changing one string.
 
 Every number in the themes is traceable to a publisher document. Nothing is guessed; the two values that
 had to be derived are marked as such, and [`journalfig.source`][journalfig.source] reports when each
@@ -52,7 +53,7 @@ two-column geometry (7.0 in text width, 0.25 in gutter) and are the only inferre
 
 ## Colours
 
-Okabe–Ito, identical across all three themes so retargeting never changes colours. This follows APS's
+Okabe–Ito, identical across every theme so retargeting never changes colours. This follows APS's
 explicit requirement to use accessible palettes and to distinguish curves by line style as well as hue, so
 figures survive greyscale printing.
 

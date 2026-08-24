@@ -63,7 +63,7 @@ def _style_keys() -> list[str]:
 
 @pytest.mark.parametrize("journal", jf.JOURNALS)
 def test_resolved_rcparams_match_reference(journal):
-    reference = json.loads(REFERENCE_PATH.read_text())
+    reference = json.loads(REFERENCE_PATH.read_text(encoding="utf-8"))
     assert journal in reference, f"no reference for {journal!r}; regenerate tests/rcparams_reference.json"
 
     expected = reference[journal]
@@ -74,7 +74,7 @@ def test_resolved_rcparams_match_reference(journal):
 
 def test_reference_covers_every_key_the_themes_set():
     """A theme that starts setting a new rcParam must be re-snapshotted, or the guard has a hole."""
-    reference = json.loads(REFERENCE_PATH.read_text())
+    reference = json.loads(REFERENCE_PATH.read_text(encoding="utf-8"))
     for journal in jf.JOURNALS:
         missing = set(_style_keys()) - set(reference.get(journal, {}))
         assert not missing, f"{journal} sets un-snapshotted rcParams: {sorted(missing)}"
@@ -83,5 +83,5 @@ def test_reference_covers_every_key_the_themes_set():
 if __name__ == "__main__":
     keys = _style_keys()
     snapshot = {journal: _resolved(journal, keys) for journal in jf.JOURNALS}
-    REFERENCE_PATH.write_text(json.dumps(snapshot, indent=2, sort_keys=True) + "\n")
+    REFERENCE_PATH.write_text(json.dumps(snapshot, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     print(f"wrote {REFERENCE_PATH} — {len(jf.JOURNALS)} themes x {len(keys)} rcParams")

@@ -54,7 +54,8 @@ def main() -> None:
     # savetxt prefixes every header line with "# ", so a blank one is left holding a trailing space.
     # The repository's trailing-whitespace hook would strip it and the committed file would then no
     # longer be what this script writes -- which is the one property the file is here to have.
-    OUT.write_text("\n".join(line.rstrip() for line in OUT.read_text().splitlines()) + "\n")
+    lines = OUT.read_text(encoding="utf-8").splitlines()
+    OUT.write_text("\n".join(line.rstrip() for line in lines) + "\n", encoding="utf-8")
     print(f"wrote {OUT} ({OUT.stat().st_size / 1024:.1f} kB, {N_POINTS} rows)")
 
 
