@@ -221,4 +221,8 @@ jobs:
         run: |
           set -euo pipefail
           echo "Publishing release v$VERSION"
-          gh release edit "v$VERSION" --draft=false --latest
+          # --verify-tag aborts if the tag is not already on the remote. The tag is pushed in the step
+          # above, so this should never trip -- but if that push ever failed silently, publishing would
+          # make GitHub create the tag itself at whatever main happens to be, which is precisely the
+          # mistake this whole step exists to prevent.
+          gh release edit "v$VERSION" --draft=false --latest --verify-tag
