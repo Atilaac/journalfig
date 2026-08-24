@@ -1,13 +1,15 @@
 # Companion package that reserves the plural spelling on PyPI and forwards it to journalfig.
 # It is built and released separately from the main package: `cd packaging/journalfigs && python -m build`.
-# Bump its version only when the alias itself changes -- it does not track journalfig's version.
+# Its version tracks journalfig's: scripts/set_version.py rewrites it during a release, and
+# tests/test_version_consistency.py fails if the two ever disagree. That means a release bumps this
+# package even when the alias code is unchanged -- accepted, so that no version is ever edited by hand.
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
 name = "journalfigs"
-version = "0.1.0"
+version = "0.4.0"
 description = "Alias for journalfig: installing this installs and re-exports the real package"
 readme = "README.md"
 requires-python = ">=3.12"

@@ -8,7 +8,8 @@ name: Version Bump
 #   2. This workflow asks Release Drafter what the next version is -- the draft's tag is
 #      v$RESOLVED_VERSION, resolved from the labels on everything merged since the last release
 #      (.github/release-drafter.yml encodes the table in CONTRIBUTING.md).
-#   3. It writes that number into the two files that carry it and opens a bump pull request.
+#   3. It writes that number into every file that carries one (scripts/set_version.py) and opens a
+#      bump pull request.
 #   4. Merging the bump pull request tags v<version> on main.
 #   5. Publishing the draft GitHub Release fires publish.yml, which builds and uploads to PyPI.
 #
@@ -145,34 +146,12 @@ jobs:
           gh api -X PATCH "repos/${{ github.repository }}/releases/${{ steps.version.outputs.draft_id }}" \
             -f tag_name="$V" -f name="$V"
 
-      - name: Write the version into the files that carry it
-        env:
-          VERSION: ${{ steps.version.outputs.version }}
-        run: |
-          python - <<'PY'
-          import datetime, os, pathlib, re, sys
-
-          version = os.environ["VERSION"]
-          if not re.fullmatch(r"\d+\.\d+\.\d+", version):
-              sys.exit(f"refusing to write a version that is not X.Y.Z: {version!r}")
-
-          # Every substitution is asserted rather than assumed. A silent no-op here would produce a bump
-          # pull request that changes nothing, tag a version the package does not report, and only fail
-          # much later in publish.yml -- after the release notes are already public.
-          def sub(path, pattern, replacement):
-              file = pathlib.Path(path)
-              text = file.read_text(encoding="utf-8")
-              new, count = re.subn(pattern, replacement, text, count=1, flags=re.M)
-              if count != 1:
-                  sys.exit(f"{path}: pattern {pattern!r} matched {count} times, expected exactly 1")
-              file.write_text(new, encoding="utf-8")
-              print(f"{path}: {pattern!r} -> {replacement!r}")
-
-          # pyproject.toml carries no literal version: [tool.hatch.version] reads this one.
-          sub("src/journalfig/__init__.py", r'^__version__ = "[^"]+"', f'__version__ = "{version}"')
-          sub("CITATION.cff", r"^version: .+", f"version: {version}")
-          sub("CITATION.cff", r"^date-released: .+", f"date-released: {datetime.date.today()}")
-          PY
+      - name: Write the version into every file that carries one
+        # scripts/set_version.py, not an inline snippet: the same code path can then be run by hand, and
+        # tests/test_version_consistency.py checks the result of something executable. It covers
+        # __init__.py, CITATION.cff, the journalfigs alias package, and the stored output of the eight
+        # example notebooks, which the docs site renders verbatim.
+        run: python scripts/set_version.py "${{ steps.version.outputs.version }}"
 
       - name: Confirm the package reports the new version
         env:
