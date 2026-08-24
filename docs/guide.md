@@ -1,5 +1,9 @@
 # Guide
 
+This page is mechanics: the traps in matplotlib and in this package, and the incantation for each. For
+the other half — what makes a figure worth submitting, and how much of that the tool can carry — see
+[figure design](figure-design.md).
+
 ## Panels of different sizes
 
 [`jf.mosaic`][journalfig.mosaic] sketches the layout as text: one character per grid cell, repeated where a
