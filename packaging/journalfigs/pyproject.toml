@@ -9,7 +9,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "journalfigs"
-version = "0.5.0"
+version = "0.5.1"
 description = "Alias for journalfig: installing this installs and re-exports the real package"
 readme = "README.md"
 requires-python = ">=3.12"
