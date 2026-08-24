@@ -32,6 +32,40 @@ jobs:
         with:
           python-version: "3.12"
       - run: pip install build twine
+
+      - name: Point the README's images at absolute URLs for PyPI
+        # PyPI renders the README standalone, so a relative path like docs/assets/logo.svg resolves to
+        # pypi.org/project/journalfig/docs/assets/logo.svg and 404s -- which is why the logo was missing
+        # from the 0.1.0-0.3.0 pages. GitHub resolves the relative form correctly, so the repository keeps
+        # it and only the packaged copy is rewritten; nothing here is committed.
+        #
+        # Pinned to the release tag rather than main, so an old release's page keeps rendering the assets
+        # as they were when it shipped.
+        #
+        # Worth knowing: PyPI's sanitiser strips <source> entirely, so the <picture> dark-mode variant
+        # never applies there and the <img> fallback is what renders. That is fine -- logo.svg carries its
+        # own prefers-color-scheme query, which browsers honour for SVG loaded through <img>.
+        env:
+          REF: ${{ github.event.release.tag_name || 'main' }}
+        run: |
+          python - <<'PY'
+          import os, pathlib, re
+
+          base = f"https://github.com/Atilaac/journalfig/raw/{os.environ['REF']}/"
+          readme = pathlib.Path("README.md")
+          text = readme.read_text(encoding="utf-8")
+
+          rewritten, count = re.subn(r'(src|srcset)="(?!https?://)([^"]+)"', rf'\1="{base}\2"', text)
+          readme.write_text(rewritten, encoding="utf-8")
+          print(f"rewrote {count} image path(s) against {os.environ['REF']}")
+
+          # Assert the outcome rather than the operation: zero rewrites is fine (someone may have made
+          # them absolute already), but a relative path surviving into the upload is the actual bug.
+          leftover = re.findall(r'(?:src|srcset)="(?!https?://)[^"]+"', rewritten)
+          if leftover:
+              raise SystemExit(f"relative image paths would 404 on PyPI: {leftover}")
+          PY
+
       - run: python -m build
       - run: twine check dist/*
 
