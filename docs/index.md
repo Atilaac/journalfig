@@ -33,6 +33,9 @@ pixel rounding.
 
 ## What each theme enforces
 
+Three of the twelve themes, as a sample — the full tables for every publisher, each with the document it
+came from and the date it was last checked, are in [Specifications](specifications.md).
+
 | | **Nature** | **APS** (PRB/PRL) | **Elsevier** |
 |---|---|---|---|
 | single | 89 mm | 3.375 in (8.5 cm) | 90 mm |
@@ -48,8 +51,12 @@ pixel rounding.
 | accepts as final artwork | PDF | PDF, EPS | PDF, EPS, TIFF, JPEG |
 | raster dpi | 300 | 600 | 500 |
 
-APS publishes only the single-column width; the 1.5- and 2-column values are derived from standard REVTeX
-two-column geometry (7.0 in text width, 0.25 in gutter) and are the only inferred numbers in the package.
+Six numbers in the package are not quoted directly from a publisher, and each is marked `DERIVED` beside
+the value it stands in for. Two are APS widths: APS publishes only the single-column width, so the 1.5- and
+2-column values follow from standard REVTeX two-column geometry (7.0 in text width, 0.25 in gutter). The
+other four are unit conversions of figures PLOS does publish — its two widths (789 and 2250 px at 300 dpi)
+and its maximum height (2625 px), plus its 0.2 mm minimum line width expressed in points. Every other
+number is quoted from the publisher's own document.
 
 ## Colours
 
