@@ -7,6 +7,11 @@ copyright: Copyright &copy; Achraf Atila
 
 theme:
   name: material
+  # The header bar is the primary colour in both schemes, so the header logo is the fixed light
+  # variant -- the adaptive one went near-black on it in light mode and disappeared. The favicon sits
+  # on browser chrome instead, where following the reader's theme is right.
+  logo: assets/logo-inverted.svg
+  favicon: assets/logo.svg
   features:
     - navigation.sections
     - content.code.copy
@@ -14,11 +19,15 @@ theme:
   palette:
     - media: "(prefers-color-scheme: light)"
       scheme: default
+      primary: custom
+      accent: custom
       toggle:
         icon: material/brightness-7
         name: Switch to dark mode
     - media: "(prefers-color-scheme: dark)"
       scheme: slate
+      primary: custom
+      accent: custom
       toggle:
         icon: material/brightness-4
         name: Switch to light mode
@@ -56,6 +65,9 @@ nav:
 # __pycache__ appears under examples/data/ after the data generator runs and must not reach the site.
 exclude_docs: |
   tutorials/data/__pycache__/
+
+extra_css:
+  - stylesheets/extra.css
 
 plugins:
   - search

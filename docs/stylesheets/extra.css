@@ -1,0 +1,67 @@
+/* The header bar is Material's primary colour in BOTH schemes, so whatever sits on it must be legible
+   against one fixed background. Using the logo's own ink makes the header read as the logo's panel,
+   and gives the widest contrast margin of any candidate measured: white 15.4:1, the logo's light blue
+   7.8:1, its orange 6.6:1. Default indigo gave the light-mode logo 2.24:1, which is why it vanished. */
+:root {
+  --md-primary-fg-color:        #182634;
+  --md-primary-fg-color--light: #2c3e52;
+  --md-primary-fg-color--dark:  #0e1720;
+  --md-primary-bg-color:        #ffffff;
+  --md-accent-fg-color:         #2b8cc4;
+  /* Material defaults the link colour to the primary. With a near-black primary that makes every link
+     look like body text on a light page, and vanish outright on a dark one (1.05:1, measured). Set it
+     explicitly per scheme instead: Okabe-Ito blue here, its light counterpart on slate. */
+  --md-typeset-a-color:         #0072B2;
+}
+
+[data-md-color-scheme="slate"] {
+  --md-primary-fg-color:        #182634;
+  --md-primary-fg-color--light: #2c3e52;
+  --md-primary-fg-color--dark:  #0e1720;
+  --md-primary-bg-color:        #ffffff;
+  /* Lighter accent on a dark page, where #2b8cc4 on slate is too dim for a link. */
+  --md-accent-fg-color:         #6fc2f0;
+  --md-typeset-a-color:         #6fc2f0;
+}
+
+/* A logo placed in page content, not in the header, does follow the scheme. Mark the two copies
+   .logo-light / .logo-dark and this swaps them. */
+[data-md-color-scheme="default"] .md-typeset .logo-dark  { display: none; }
+[data-md-color-scheme="slate"]   .md-typeset .logo-light { display: none; }
+
+/* ---------- Sidebar logo ---------- */
+
+/* Material renders the site name as text at the top of the primary nav and hides the logo image there
+   (`.md-nav__title .md-nav__button { display: none }`). Replacing that text with a large mark is the
+   amorphouspy pattern. It uses background-image rather than an <img>, which is what lets CSS pick the
+   variant per scheme -- the sidebar sits on the page background, so unlike the header it really does
+   follow light/dark. */
+@media screen and (min-width: 76.25em) {
+  .md-nav--primary > .md-nav__title {
+    /* Hides the "journalfig" text without removing it from the accessibility tree. */
+    font-size: 0;
+    line-height: 0;
+    padding: 0.8rem 0 0.4rem;
+  }
+
+  .md-nav--primary > .md-nav__title::before {
+    content: "";
+    display: block;
+    width: 62%;
+    max-width: 7rem;
+    margin: 0 auto;
+    aspect-ratio: 400 / 450;
+    background: url("../assets/logo.svg") no-repeat center center;
+    background-size: contain;
+  }
+
+  [data-md-color-scheme="slate"] .md-nav--primary > .md-nav__title::before {
+    background-image: url("../assets/logo-inverted.svg");
+  }
+}
+
+/* The mobile drawer *does* show the logo image, on the page background rather than the header bar, so
+   the inverted file set as theme.logo is wrong there in light mode. Swap it back. */
+[data-md-color-scheme="default"] .md-nav--primary .md-nav__title .md-logo img {
+  content: url("../assets/logo.svg");
+}

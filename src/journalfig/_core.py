@@ -77,6 +77,19 @@ _ACTIVE: str | None = None
 #: closing a figure releases it.
 _PINNED: WeakKeyDictionary[Figure, tuple[float, float]] = WeakKeyDictionary()
 
+
+def _rc() -> dict[str, Any]:
+    """``plt.rcParams`` viewed as a plain dict, for keys built at runtime.
+
+    matplotlib >= 3.11 types ``RcParams`` keys as a ``Literal`` of every valid rcParam name, which a key
+    assembled at runtime -- ``f"font.{name}"``, or one read out of a tuple -- cannot satisfy. ``RcParams``
+    is a ``dict`` subclass, so this view is accurate rather than a suppression, and it stays correct on
+    matplotlib 3.8, whose stubs carry no such ``Literal`` and where a ``# type: ignore`` would itself fail
+    under ``warn_unused_ignores``.
+    """
+    return cast("dict[str, Any]", plt.rcParams)
+
+
 _FONT_SIZE_KEYS = (
     "font.size",
     "axes.labelsize",
@@ -164,7 +177,7 @@ def active() -> str | None:
 def _scale_fonts(factor: float) -> None:
     for key in _FONT_SIZE_KEYS:
         try:
-            plt.rcParams[key] = float(plt.rcParams[key]) * factor
+            _rc()[key] = float(_rc()[key]) * factor
         except (TypeError, ValueError):
             continue
 
@@ -711,7 +724,7 @@ def _expand_families(families: str | Iterable[str]) -> tuple[str, ...]:
     expanded: list[str] = []
     for name in names:
         if name in ("sans-serif", "serif", "monospace", "cursive", "fantasy"):
-            expanded.extend(plt.rcParams[f"font.{name}"])
+            expanded.extend(_rc()[f"font.{name}"])
         else:
             expanded.append(str(name))
     return tuple(expanded)
@@ -1120,7 +1133,7 @@ def save(
         # Scoped to this write: svg.fonttype is a global rcParam, and a caller asking for outlined text
         # in one file should not silently get it in every figure drawn afterwards.
         overrides = {"svg.fonttype": svg_text} if svg_text is not None and fmt.lower() == "svg" else {}
-        with plt.rc_context(overrides):
+        with plt.rc_context(cast("Any", overrides)):
             # No stated floor and no explicit request leaves dpi to the theme's own savefig.dpi.
             written_dpi = dpi if dpi is not None else spec.raster_dpi
             if written_dpi is None:
