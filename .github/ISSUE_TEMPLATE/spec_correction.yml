@@ -1,0 +1,43 @@
+name: Specification correction
+description: A number in a theme does not match what the publisher currently documents
+labels: [specification]
+body:
+  - type: markdown
+    attributes:
+      value: >
+        Publishers revise their artwork guidelines, and every number in this package is meant to be
+        traceable to one. Corrections are the most valuable contribution the project can receive.
+
+  - type: dropdown
+    id: journal
+    attributes:
+      label: Journal
+      options: [nature, aps, elsevier, other]
+    validations:
+      required: true
+
+  - type: input
+    id: value
+    attributes:
+      label: Which value
+      placeholder: e.g. widths_mm["double"], text_min_pt, min_marker_mm
+    validations:
+      required: true
+
+  - type: input
+    id: correct
+    attributes:
+      label: What the publisher states
+      placeholder: e.g. 180 mm, not 183 mm
+    validations:
+      required: true
+
+  - type: textarea
+    id: source
+    attributes:
+      label: Source
+      description: >
+        A link to the publisher document, its edition or date, and the section or page the value
+        appears on. A screenshot helps when the document is a PDF without stable anchors.
+    validations:
+      required: true
