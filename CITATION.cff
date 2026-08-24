@@ -13,8 +13,8 @@ authors:
 repository-code: "https://github.com/Atilaac/journalfig"
 url: "https://github.com/Atilaac/journalfig"
 license: MIT
-version: 0.1.0
-# date-released: YYYY-MM-DD  # fill in when the first release is tagged
+version: 0.3.0
+date-released: 2026-08-24
 # doi:                        # add the Zenodo DOI once the repository is archived
 keywords:
   - matplotlib
