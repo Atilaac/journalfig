@@ -10,12 +10,14 @@ name: Version Bump
 #      (.github/release-drafter.yml encodes the table in CONTRIBUTING.md).
 #   3. It writes that number into every file that carries one (scripts/set_version.py) and opens a
 #      bump pull request.
-#   4. Merging the bump pull request tags v<version> on main.
-#   5. Publishing the draft GitHub Release fires publish.yml, which builds and uploads to PyPI.
+#   4. Merging the bump pull request tags v<version> on main and publishes the draft release.
+#   5. Publishing fires publish.yml, which builds, smoke-tests the wheel and uploads to PyPI.
 #
-# Steps 1 and 5 are deliberately human. Applying the `release` label is the decision to cut a release,
-# and publishing the draft is the last chance to read the notes before they are permanent -- PyPI
-# uploads cannot be replaced, only yanked.
+# The two human gates are applying the `release` label and merging the bump pull request. Publishing is
+# deliberately NOT one of them any more: when it was, publishing the draft before the bump merged created
+# the tag on the previous commit and the release failed -- that is how v0.5.0 broke. Read the draft's
+# notes before merging the bump pull request; that is now the last reversible moment, since a PyPI upload
+# can only be yanked, never replaced.
 #
 # One-time setup:
 #   gh label create release --color 0e8a16 --description "Merging this PR cuts a release"
@@ -205,3 +207,18 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git tag -a "v$VERSION" -m "v$VERSION"
           git push origin "v$VERSION"
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+
+      - name: Publish the draft release, which ships it to PyPI
+        # Publishing is what fires publish.yml, and doing it here rather than by hand is what removes the
+        # ordering hazard. A human publishing the draft *before* the bump merges creates the tag on the
+        # previous commit, so the tag names a version the package does not yet report and publish.yml
+        # correctly refuses it -- that is exactly how v0.5.0 failed. Tagging and publishing in one step
+        # makes the wrong order impossible: the draft can only go out once the bump commit exists and
+        # carries the tag.
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          echo "Publishing release v$VERSION"
+          gh release edit "v$VERSION" --draft=false --latest
