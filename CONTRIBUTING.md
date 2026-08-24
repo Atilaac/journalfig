@@ -111,6 +111,13 @@ Two patterns strict mode rules out, in case you reach for them: unpacking a dict
 `dataclasses.replace`; and re-exporting a name through a module that merely imported it is rejected, so
 import from where a symbol is defined.
 
+`mypy`'s answer depends on the matplotlib version and the lint job installs the newest, so a local
+environment pinning an older one can report success where CI fails -- matplotlib 3.11 narrowing
+`RcParams` keys to a `Literal` did exactly that. Verify in a fresh venv (`pip install -e ".[dev]"`) before
+assuming a signature change is clean. At the `matplotlib==3.8.*` floor mypy reports four unrelated errors
+from incomplete `Artist` stubs; no job runs mypy there and they are deliberately left alone.
+
+
 `pyproject.toml` claims `matplotlib>=3.8` and `python>=3.12`, and a `minimum-versions` CI job installs
 exactly that so the floor is tested rather than asserted. If you use a matplotlib feature newer than 3.8,
 that job is what will tell you. The two floors are more coupled than they look: matplotlib 3.8 is the
