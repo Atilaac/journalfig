@@ -132,10 +132,17 @@ committed file and the generator disagree; `tests/test_docsgen.py` does the same
 page. `register()` globs the style directory and `JOURNALS` follows `SPECS`, so everything parametrised
 over `jf.JOURNALS` picks the new key up automatically.
 
-Two things the generators cannot reach: the theme count in the one-line description, which appears in
-`pyproject.toml`, `mkdocs.yml`, `CITATION.cff`, `README.md` and the `_specs.py` and `__init__.py` module
-docstrings; and `tests/rcparams_reference.json`, which needs regenerating with
-`python tests/test_rcparams.py` so the new theme's resolved rcParams are snapshotted.
+Three things the generators cannot reach:
+
+- **Image baselines.** Three tests in `tests/test_visual.py` are parametrised over `jf.JOURNALS`, so a new
+  key silently creates three tests with no baseline to compare against. They pass locally, because the
+  comparison only runs under `--mpl`, and then fail the `visual` CI job with "image not found". Generate
+  them from the pinned environment described in *Changing what a figure looks like* below, and commit only
+  the new files — if the regenerated run also changes an existing baseline, stop and find out why.
+- **`tests/rcparams_reference.json`**, regenerated with `python tests/test_rcparams.py`, so the new theme's
+  resolved rcParams are snapshotted.
+- **The theme count in the one-line description**, which is written out as a word in `pyproject.toml`,
+  `mkdocs.yml`, `CITATION.cff`, `README.md` and the `_specs.py` and `__init__.py` module docstrings.
 
 **No test can tell you whether the numbers are right.** The suite verifies an entry is complete and
 self-consistent, never that it matches the publisher's document. That stays a human review against the
