@@ -8,7 +8,7 @@ Author: Achraf Atila (achraf.atila@bam.de)
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 
 #: Default height-to-width ratio (inverse golden ratio). Lives here rather than in _core so the
 #: stylesheet generator can derive a default figure size without importing matplotlib.
@@ -316,26 +316,32 @@ class JournalSpec:
 
 #: Furniture for a theme whose base text is 8-9 pt. The ThemeStyle defaults suit a 7 pt base; a larger
 #: one carries slightly longer ticks and larger markers without looking heavy.
-_MEDIUM = {
-    "axes_linewidth": 0.6,
-    "grid_linewidth": 0.5,
-    "tick_major_size": 3.0,
-    "tick_minor_size": 1.8,
-    "tick_major_width": 0.6,
-    "tick_minor_width": 0.5,
-    "tick_pad": 2.5,
-    "marker_size": 4.0,
-    "marker_edge_width": 0.7,
-    "errorbar_capsize": 2.0,
-    "legend_handlelength": 1.8,
-}
+#: A ThemeStyle rather than a dict of overrides: unpacking ``**dict`` into a dataclass defeats type
+#: checking, because the dict's inferred value type has to satisfy every field at once.
+_MEDIUM = ThemeStyle(
+    axes_linewidth=0.6,
+    grid_linewidth=0.5,
+    tick_major_size=3.0,
+    tick_minor_size=1.8,
+    tick_major_width=0.6,
+    tick_minor_width=0.5,
+    tick_pad=2.5,
+    marker_size=4.0,
+    marker_edge_width=0.7,
+    errorbar_capsize=2.0,
+    legend_handlelength=1.8,
+)
 
-#: Serif rendering, for themes whose publisher sets its text in Times.
-_SERIF = {
-    "mathtext_fontset": "stix",
-    "font_family_category": "serif",
-    "font_stack": ("Times New Roman", "Times", "Nimbus Roman", "Liberation Serif", "STIXGeneral", "DejaVu Serif"),
-}
+#: _MEDIUM in Times, for publishers who set their body text in a serif face. The centred, non-bold panel
+#: title travels with it because the two publishers that use this style (IOP and AIP) both ask for it.
+_SERIF = replace(
+    _MEDIUM,
+    title_weight="normal",
+    title_location="center",
+    mathtext_fontset="stix",
+    font_family_category="serif",
+    font_stack=("Times New Roman", "Times", "Nimbus Roman", "Liberation Serif", "STIXGeneral", "DejaVu Serif"),
+)
 
 
 SPECS: dict[str, JournalSpec] = {
@@ -495,7 +501,7 @@ SPECS: dict[str, JournalSpec] = {
         # listed as body faces here.
         font_families=("Times", "Helvetica"),
         font_substitutes=("Nimbus Roman", "Liberation Serif", "Tinos", "TeX Gyre Termes", "STIXGeneral"),
-        style=ThemeStyle(**_MEDIUM, title_weight="normal", title_location="center", **_SERIF),
+        style=_SERIF,
         notes=("IOP states no resolution requirement, so save() writes at the theme's own 600 dpi.",),
     ),
     "aip": JournalSpec(
@@ -523,7 +529,7 @@ SPECS: dict[str, JournalSpec] = {
         # reports the face as "unrestricted" rather than inventing a requirement to fail.
         font_families=(),
         font_substitutes=(),
-        style=ThemeStyle(**_MEDIUM, title_weight="normal", title_location="center", **_SERIF),
+        style=_SERIF,
         notes=("AIP names no required typeface; check() reports fonts as unrestricted here.",),
     ),
     "acs": JournalSpec(
@@ -550,7 +556,7 @@ SPECS: dict[str, JournalSpec] = {
         font_sizes={"base": 8.0, "label": 8.0, "tick": 8.0, "legend": 8.0, "title": 8.0},
         font_families=("Helvetica", "Arial"),
         font_substitutes=("Nimbus Sans", "Liberation Sans", "Arimo", "TeX Gyre Heros"),
-        style=ThemeStyle(**_MEDIUM),
+        style=_MEDIUM,
         notes=(
             "ACS accepts lettering down to 4.5 pt, far below what the other themes allow. check()\n"
             "enforces what the document says, so it will pass text most readers cannot read.",
@@ -598,7 +604,7 @@ SPECS: dict[str, JournalSpec] = {
         font_sizes={"base": 9.0, "label": 9.0, "tick": 9.0, "legend": 9.0, "title": 9.0},
         font_families=("Helvetica", "Times New Roman", "Arial", "Cambria", "Symbol"),
         font_substitutes=("Nimbus Sans", "Liberation Sans", "Arimo", "TeX Gyre Heros"),
-        style=ThemeStyle(**_MEDIUM),
+        style=_MEDIUM,
     ),
     "plos": JournalSpec(
         name="PLOS",
@@ -620,7 +626,7 @@ SPECS: dict[str, JournalSpec] = {
         font_sizes={"base": 8.0, "label": 8.0, "tick": 8.0, "legend": 8.0, "title": 8.0},
         font_families=("Arial", "Times"),
         font_substitutes=("Nimbus Sans", "Liberation Sans", "Arimo", "TeX Gyre Heros"),
-        style=ThemeStyle(**_MEDIUM),
+        style=_MEDIUM,
         notes=(
             "PLOS states a resolution ceiling as well as a floor -- 300 to 600 dpi, and no more.\n"
             "JournalSpec models floors only, so the upper bound is not enforced.",
@@ -645,7 +651,7 @@ SPECS: dict[str, JournalSpec] = {
         font_sizes={"base": 8.0, "label": 8.0, "tick": 8.0, "legend": 8.0, "title": 8.0},
         font_families=(),  # Wiley's artwork guidelines name no typeface at all.
         font_substitutes=(),
-        style=ThemeStyle(**_MEDIUM),
+        style=_MEDIUM,
         notes=("Wiley's artwork guide states widths, formats and resolution, and nothing about type.",),
     ),
     "pnas": JournalSpec(
@@ -669,7 +675,7 @@ SPECS: dict[str, JournalSpec] = {
         font_sizes={"base": 8.0, "label": 8.0, "tick": 8.0, "legend": 8.0, "title": 8.0},
         font_families=("Arial", "Helvetica", "Times"),
         font_substitutes=("Nimbus Sans", "Liberation Sans", "Arimo", "TeX Gyre Heros"),
-        style=ThemeStyle(**_MEDIUM),
+        style=_MEDIUM,
         notes=(
             "PNAS asks for LZW compression on TIFFs and never JPEG compression, which is what this\n"
             "package writes by default. Colour must be supplied as RGB.",
