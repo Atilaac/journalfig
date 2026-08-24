@@ -7,8 +7,8 @@
 
 <p align="center">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="docs/assets/logo-inverted.svg">
-    <img src="docs/assets/logo.svg" alt="journalfig logo" width="320">
+    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/Atilaac/journalfig/main/docs/assets/logo-inverted.svg">
+    <img src="https://raw.githubusercontent.com/Atilaac/journalfig/main/docs/assets/logo.svg" alt="journalfig logo" width="320">
   </picture>
 </p>
 
