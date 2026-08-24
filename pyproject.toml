@@ -87,7 +87,14 @@ quote-style = "double"
 indent-style = "space"
 
 [tool.ruff.lint]
-select = ["E", "F", "I", "N", "UP", "B", "W"]
+# PLW1514 is preview-only, which is why `preview` is on; it adds no other findings to this codebase.
+# It exists here because text I/O without an explicit encoding is the one bug class that passes on
+# Linux and macOS and fails only on Windows: `read_text()` uses the locale encoding, which is UTF-8
+# on the developer machines and cp1252 on a Windows runner, so any non-ASCII character in a file the
+# package reads back -- an em dash in docs/specifications.md -- decodes to mojibake there and nowhere
+# else. That failed the whole Windows matrix while every other job passed.
+preview = true
+select = ["E", "F", "I", "N", "UP", "B", "W", "PLW1514"]
 
 [tool.ruff.lint.pydocstyle]
 convention = "google"

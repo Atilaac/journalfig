@@ -20,8 +20,8 @@ pre-commit install
 pytest -q                                   # tests/ plus every docstring Example: block
 coverage run -m pytest -q && coverage report # coverage (see the note below -- not pytest-cov)
 pytest tests/test_journalfig.py -x -k mosaic  # one test
-ruff check src/ tests/ demo.py
-ruff format --check --diff src/ tests/ demo.py
+ruff check src/ tests/ demo.py conftest.py examples/
+ruff format --check --diff src/ tests/ demo.py conftest.py examples/
 pytest --mpl tests/test_visual.py           # image comparison against tests/baseline/
 mkdocs serve                                # live docs preview
 pytest --nbval-lax examples/                # execute every example notebook

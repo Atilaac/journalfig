@@ -19,8 +19,10 @@ jobs:
         with:
           python-version: "3.12"
       - run: pip install -e ".[dev]"
-      - run: ruff check src/ tests/ demo.py
-      - run: ruff format --check --diff src/ tests/ demo.py
+      # conftest.py and examples/ are included so PLW1514 (text I/O without an explicit encoding)
+      # guards them too -- the data generator was one of the sites that broke the Windows matrix.
+      - run: ruff check src/ tests/ demo.py conftest.py examples/
+      - run: ruff format --check --diff src/ tests/ demo.py conftest.py examples/
 
   test:
     # Font resolution and figure-size rounding are both platform-dependent, and they are exactly what

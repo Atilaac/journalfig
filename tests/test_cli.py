@@ -65,7 +65,7 @@ def script(tmp_path):
 
     def _write(body, name="figs.py"):
         path = tmp_path / name
-        path.write_text(body)
+        path.write_text(body, encoding="utf-8")
         return str(path)
 
     return _write

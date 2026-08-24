@@ -87,7 +87,7 @@ def load_figures(target: str) -> list[Figure]:
         >>> script = "import matplotlib.pyplot as plt\\nplt.figure()\\n"
         >>> with tempfile.TemporaryDirectory() as d:
         ...     path = Path(d) / "make.py"
-        ...     _ = path.write_text(script)
+        ...     _ = path.write_text(script, encoding="utf-8")
         ...     len(load_figures(str(path)))
         1
         >>> plt.close("all")

@@ -118,11 +118,11 @@ def read_tail(path: Path | None = None) -> str:
         >>> import tempfile
         >>> with tempfile.TemporaryDirectory() as d:
         ...     page = Path(d) / "specifications.md"
-        ...     _ = page.write_text(f"# Specifications\\n\\n{SENTINEL} -->\\n\\n## Choices\\n")
+        ...     _ = page.write_text(f"# Specifications\\n\\n{SENTINEL} -->\\n\\n## Choices\\n", encoding="utf-8")
         ...     read_tail(page).startswith(SENTINEL)
         True
     """
-    text = (path or _DOCS_PAGE).read_text()
+    text = (path or _DOCS_PAGE).read_text(encoding="utf-8")
     index = text.find(SENTINEL)
     if index < 0:
         raise ValueError(f"no {SENTINEL!r} marker; refusing to regenerate over hand-written prose")
@@ -142,13 +142,13 @@ def write_specifications(path: Path | None = None) -> Path:
         >>> import tempfile
         >>> with tempfile.TemporaryDirectory() as d:
         ...     page = Path(d) / "specifications.md"
-        ...     _ = page.write_text(f"{SENTINEL} -->\\n\\n## Choices the package makes\\n")
+        ...     _ = page.write_text(f"{SENTINEL} -->\\n\\n## Choices the package makes\\n", encoding="utf-8")
         ...     written = write_specifications(page)
-        ...     "### Nature Portfolio" in written.read_text()
+        ...     "### Nature Portfolio" in written.read_text(encoding="utf-8")
         True
     """
     target = path or _DOCS_PAGE
-    target.write_text(specifications_text(read_tail(target)))
+    target.write_text(specifications_text(read_tail(target)), encoding="utf-8")
     return target
 
 

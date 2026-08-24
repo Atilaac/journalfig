@@ -477,7 +477,7 @@ def test_save_writes_pdf_svg_and_png_for_every_journal(tmp_path, journal):
     assert [p.suffix for p in written] == [".pdf", ".svg", ".png"]
     assert all(p.exists() and p.stat().st_size > 0 for p in written)
     # svg.fonttype "none" keeps text live and editable rather than converting glyphs to outlines.
-    assert "<text" in (tmp_path / "fig.svg").read_text()
+    assert "<text" in (tmp_path / "fig.svg").read_text(encoding="utf-8")
 
 
 @pytest.mark.parametrize(
@@ -708,7 +708,7 @@ def test_save_svg_text_mode(tmp_path, mode, expect_text):
         # SVG alone is not submittable anywhere, which save() rightly says; not what this test is about.
         warnings.simplefilter("ignore", jf.JournalFigWarning)
         (written,) = jf.save(fig, tmp_path / f"fig_{mode}", formats=["svg"], validate=False, svg_text=mode)
-    assert ("<text" in written.read_text()) is expect_text
+    assert ("<text" in written.read_text(encoding="utf-8")) is expect_text
 
 
 def test_save_svg_text_does_not_leak_into_later_figures(tmp_path):
