@@ -2,7 +2,6 @@
 
 [![CI](https://github.com/Atilaac/journalfig/actions/workflows/ci.yml/badge.svg)](https://github.com/Atilaac/journalfig/actions/workflows/ci.yml)
 [![PyPI](https://img.shields.io/pypi/v/journalfig.svg)](https://pypi.org/project/journalfig/)
-[![Python](https://img.shields.io/pypi/pyversions/journalfig.svg)](https://pypi.org/project/journalfig/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Docs](https://img.shields.io/badge/docs-atilaac.github.io%2Fjournalfig-2b8cc4.svg)](https://atilaac.github.io/journalfig/)
 
