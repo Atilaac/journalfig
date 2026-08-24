@@ -1,8 +1,7 @@
 name: Docs
 
 # Publishes the MkDocs site to GitHub Pages. ci.yml already builds it with --strict on every pull
-# request, which is the gate; this only deploys what main has already proved buildable. Nothing is
-# written into the repository -- there is no site/ directory to commit and no gh-pages branch.
+# request, which is the gate; this only deploys what main already proved buildable.
 #
 # One-time setup: Settings -> Pages -> Source: "GitHub Actions". Without it the deploy step fails with
 # a 404, because there is no Pages site to deploy to.
@@ -13,12 +12,12 @@ on:
     branches: [main]
   workflow_dispatch:
 
-# Read-only by default; each job asks for exactly what it needs and nothing more.
+# Read-only by default; the deploy job asks for exactly what it needs and nothing more.
 permissions:
   contents: read
 
-# One deploy at a time, and never cancel one midway -- a half-finished deploy leaves the published site
-# inconsistent, unlike a cancelled test run.
+# One deploy at a time, and never cancel one midway -- a half-finished deploy would leave the published
+# site inconsistent, unlike a cancelled test run.
 concurrency:
   group: pages
   cancel-in-progress: false
