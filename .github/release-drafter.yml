@@ -18,6 +18,14 @@
 #   gh label create dependencies  --color 0366d6 --description "Dependency bumps"
 #   gh label create skip-changelog --color ededed --description "Keep out of the release notes"
 #
+# Release control. `release` cuts a release when its pull request merges; the other three override the
+# version the labels above would have resolved to, and are only needed when that resolution is wrong:
+#
+#   gh label create release       --color 0e8a16 --description "Merging this PR cuts a release"
+#   gh label create major         --color b60205 --description "Force a MAJOR bump (0.x -> 1.0.0)"
+#   gh label create minor         --color fbca04 --description "Force a MINOR bump"
+#   gh label create patch         --color c2e0c6 --description "Force a PATCH bump"
+#
 # `bug`, `documentation`, `enhancement` and `dependencies` are GitHub defaults and already exist;
 # `enhancement` is accepted as a synonym of `feature` for that reason. `specification` exists if the
 # spec-correction issue template has been used.
@@ -46,13 +54,23 @@ categories:
 exclude-labels: [skip-changelog]
 
 # The resolver encodes the versioning rules in CONTRIBUTING.md, under the 0.x mapping the project is
-# currently on: anything that would be a major bump after 1.0 is a minor bump now, so nothing is listed
-# under `major`. A specification change is minor at minimum and never a patch -- users pin against it.
+# currently on: anything that would be a major bump after 1.0 is a minor bump now. A specification
+# change is minor at minimum and never a patch -- users pin against it.
+#
+# `major`, `minor` and `patch` are manual overrides, applied by hand when the automatic resolution is
+# wrong. They are listed here so this file stays the single description of how a version is chosen, but
+# note that the override is NOT enforced by Release Drafter: its precedence is fixed major > minor >
+# patch, so `patch` on a pull request that also carries `feature` still resolves to minor here. Genuine
+# override -- including lowering a bump -- is resolved in version-bump.yml, which then corrects this
+# draft's tag to match. Applying `major` while the project is on 0.x means 1.0.0; that is a deliberate
+# act, not a routine one.
 version-resolver:
+  major:
+    labels: [major]
   minor:
-    labels: [breaking, specification, journal, feature, enhancement]
+    labels: [minor, breaking, specification, journal, feature, enhancement]
   patch:
-    labels: [bug, documentation, maintenance, dependencies]
+    labels: [patch, bug, documentation, maintenance, dependencies]
   default: patch
 
 change-template: "- $TITLE (#$NUMBER) @$AUTHOR"

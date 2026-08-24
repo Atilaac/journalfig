@@ -1,45 +1,137 @@
 name: Publish
 
-# Releases are cut by pushing a tag: `git tag -a v0.1.0 -m "v0.1.0" && git push origin v0.1.0`.
+# Ships a release to PyPI. Triggered by *publishing* a GitHub Release, not by pushing a tag: the tag is
+# created by version-bump.yml the moment the bump pull request merges, and a tag alone should not be
+# able to publish. Publishing the draft is the human gate, and it is the last reversible moment -- a
+# PyPI upload cannot be replaced, only yanked.
+#
 # Authentication is PyPI Trusted Publishing (OIDC) -- no API token is stored in this repository.
-# Configure the publisher once at https://pypi.org/manage/account/publishing/ with:
+# Configured once at https://pypi.org/manage/account/publishing/ with:
 #   owner Atilaac, repository journalfig, workflow publish.yml, environment pypi
+#
+# To release, see .github/workflows/version-bump.yml. Nothing here needs a version typed by hand.
 
 on:
-  push:
-    tags: ["v*"]
+  release:
+    types: [published]
   workflow_dispatch:
+
+permissions:
+  contents: read
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          # The release event checks out the tagged commit, which is the bump commit -- the first commit
+          # whose __version__ matches the tag.
+          ref: ${{ github.event.release.tag_name || github.ref }}
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
       - run: pip install build twine
+
+      - name: Point the README's images at absolute URLs for PyPI
+        # PyPI renders the README standalone, so a relative path like docs/assets/logo.svg resolves to
+        # pypi.org/project/journalfig/docs/assets/logo.svg and 404s -- which is why the logo was missing
+        # from the 0.1.0-0.3.0 pages. GitHub resolves the relative form correctly, so the repository keeps
+        # it and only the packaged copy is rewritten; nothing here is committed.
+        #
+        # Pinned to the release tag rather than main, so an old release's page keeps rendering the assets
+        # as they were when it shipped.
+        #
+        # Worth knowing: PyPI's sanitiser strips <source> entirely, so the <picture> dark-mode variant
+        # never applies there and the <img> fallback is what renders. That is fine -- logo.svg carries its
+        # own prefers-color-scheme query, which browsers honour for SVG loaded through <img>.
+        env:
+          REF: ${{ github.event.release.tag_name || 'main' }}
+        run: |
+          python - <<'PY'
+          import os, pathlib, re
+
+          base = f"https://github.com/Atilaac/journalfig/raw/{os.environ['REF']}/"
+          readme = pathlib.Path("README.md")
+          text = readme.read_text(encoding="utf-8")
+
+          rewritten, count = re.subn(r'(src|srcset)="(?!https?://)([^"]+)"', rf'\1="{base}\2"', text)
+          readme.write_text(rewritten, encoding="utf-8")
+          print(f"rewrote {count} image path(s) against {os.environ['REF']}")
+
+          # Assert the outcome rather than the operation: zero rewrites is fine (someone may have made
+          # them absolute already), but a relative path surviving into the upload is the actual bug.
+          leftover = re.findall(r'(?:src|srcset)="(?!https?://)[^"]+"', rewritten)
+          if leftover:
+              raise SystemExit(f"relative image paths would 404 on PyPI: {leftover}")
+          PY
+
       - run: python -m build
       - run: twine check dist/*
+
       - name: Verify the tag matches the packaged version
-        if: startsWith(github.ref, 'refs/tags/v')
+        if: github.event_name == 'release'
+        env:
+          TAG: ${{ github.event.release.tag_name }}
         run: |
           python - <<'PY'
           import os, pathlib, re, sys
-          tag = os.environ["GITHUB_REF_NAME"].lstrip("v")
-          init = pathlib.Path("src/journalfig/__init__.py").read_text()
+          tag = os.environ["TAG"].lstrip("v")
+          init = pathlib.Path("src/journalfig/__init__.py").read_text(encoding="utf-8")
           version = re.search(r'__version__ = "([^"]+)"', init).group(1)
           if tag != version:
-              sys.exit(f"tag {tag} does not match __version__ {version}")
+              sys.exit(f"tag {tag} does not match __version__ {version} -- did the bump pull request merge?")
           print(f"tag and __version__ agree: {version}")
           PY
+
       - uses: actions/upload-artifact@v4
         with:
           name: dist
           path: dist/
 
-  publish:
+  smoke-test:
+    # The suite runs against the source tree; this runs against the artefact that is about to be
+    # uploaded. It is the only check that would catch a packaging fault -- a missing subpackage, an
+    # unshipped stylesheet, a py.typed left out of the wheel -- which no source-tree test can see.
     needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+      - run: pip install dist/*.whl
+      - name: Import, build a figure, and check it
+        run: |
+          python - <<'PY'
+          import matplotlib
+          matplotlib.use("Agg")
+          import journalfig as jf
+
+          print("journalfig", jf.__version__)
+          assert len(jf.JOURNALS) >= 12, jf.JOURNALS
+
+          # The stylesheets and spec tables are package data; a wheel that omitted them imports fine and
+          # only fails here.
+          with jf.context("nature"):
+              fig, ax = jf.subplots("nature", width="single")
+              ax.plot([0, 1], [0, 1])
+              ax.set_xlabel("q"); ax.set_ylabel("S(q)")
+              width_mm = fig.get_size_inches()[0] * 25.4
+              assert abs(width_mm - 89.0) < 0.01, width_mm
+              assert jf.check(fig, journal="nature") == [], jf.check(fig, journal="nature")
+
+          import importlib.resources as r
+          assert (r.files("journalfig") / "py.typed").is_file(), "py.typed missing from the wheel"
+          print("smoke test OK")
+          PY
+      - run: journalfig journals
+
+  publish:
+    needs: [build, smoke-test]
     runs-on: ubuntu-latest
     environment: pypi
     permissions:

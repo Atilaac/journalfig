@@ -1,0 +1,221 @@
+name: Version Bump
+
+# Turns a merged pull request into a released version, without anyone typing a version number.
+#
+# The flow, end to end:
+#
+#   1. Merge a pull request into main carrying the `release` label.
+#   2. This workflow asks Release Drafter what the next version is -- the draft's tag is
+#      v$RESOLVED_VERSION, resolved from the labels on everything merged since the last release
+#      (.github/release-drafter.yml encodes the table in CONTRIBUTING.md).
+#   3. It writes that number into the two files that carry it and opens a bump pull request.
+#   4. Merging the bump pull request tags v<version> on main.
+#   5. Publishing the draft GitHub Release fires publish.yml, which builds and uploads to PyPI.
+#
+# Steps 1 and 5 are deliberately human. Applying the `release` label is the decision to cut a release,
+# and publishing the draft is the last chance to read the notes before they are permanent -- PyPI
+# uploads cannot be replaced, only yanked.
+#
+# One-time setup:
+#   gh label create release --color 0e8a16 --description "Merging this PR cuts a release"
+#
+# Settings -> Actions -> General -> "Allow GitHub Actions to create and approve pull requests" must be
+# on, or the bump pull request cannot be opened.
+
+on:
+  workflow_dispatch:
+  pull_request:
+    types: [closed]
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  bump-version:
+    if: |
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.pull_request.merged == true &&
+       contains(github.event.pull_request.labels.*.name, 'release'))
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Refresh the draft before reading it
+        # Merging fires both push->main (release-drafter.yml) and pull_request->closed (this workflow)
+        # at the same moment. Without running the drafter explicitly here, this job can read a draft
+        # that predates the merge it was triggered by, and resolve a version one bump behind.
+        uses: release-drafter/release-drafter@v6
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Resolve the version, honouring a manual major/minor/patch label
+        id: version
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+        run: |
+          python - <<'PY' >> "$GITHUB_OUTPUT"
+          import json, os, re, subprocess, sys
+
+          repo = os.environ["REPO"]
+
+          def run(*args):
+              return subprocess.run(args, check=True, capture_output=True, text=True).stdout.strip()
+
+          def note(msg):
+              print(msg, file=sys.stderr)
+
+          # Release Drafter's own resolver cannot express "manual overrides automatic": its precedence is
+          # fixed major > minor > patch, so `patch` alongside `feature` still resolves to minor. It can
+          # only ever raise a bump, never lower one. So the manual labels are resolved here instead, and
+          # the draft is corrected afterwards to keep its tag and this tag identical.
+          draft = json.loads(run("gh", "api", f"repos/{repo}/releases",
+                                 "--jq", "[.[] | select(.draft)] | first"))
+          if not draft:
+              sys.exit("::error::No draft release found. Has release-drafter run at least once?")
+          drafted = draft["tag_name"].lstrip("v")
+
+          # The base is the newest real tag rather than the newest published release: a tag can exist
+          # without a release, and the version must never go backwards because a release was missing.
+          tags = [t for t in run("git", "tag", "--sort=-v:refname").splitlines()
+                  if re.fullmatch(r"v\d+\.\d+\.\d+", t)]
+          base = tags[0] if tags else None
+
+          # Pull request numbers from the subjects of every commit since that tag. Reading them from the
+          # log rather than from a merge date makes this work for squash merges and merge commits alike.
+          span = f"{base}..HEAD" if base else "HEAD"
+          numbers = sorted({int(n) for n in re.findall(r"#(\d+)", run("git", "log", span, "--format=%s"))})
+
+          labels: set[str] = set()
+          for number in numbers:
+              try:
+                  labels |= set(json.loads(run("gh", "api", f"repos/{repo}/pulls/{number}",
+                                               "--jq", "[.labels[].name]")))
+              except subprocess.CalledProcessError:
+                  note(f"#{number} is not a pull request in this repository; skipped")
+
+          note(f"base tag {base or '(none)'} | pull requests {numbers or '(none)'} | labels {sorted(labels)}")
+
+          override = next((lab for lab in ("major", "minor", "patch") if lab in labels), None)
+
+          if override and base:
+              major, minor, patch = (int(p) for p in base.lstrip("v").split("."))
+              bumped = {"major": (major + 1, 0, 0),
+                        "minor": (major, minor + 1, 0),
+                        "patch": (major, minor, patch + 1)}[override]
+              version = "{}.{}.{}".format(*bumped)
+              note(f"manual '{override}' label overrides Release Drafter ({drafted}) -> {version}")
+          else:
+              version = drafted
+              note(f"no manual label; using Release Drafter's resolution -> {version}")
+
+          if not re.fullmatch(r"\d+\.\d+\.\d+", version):
+              sys.exit(f"::error::resolved version is not X.Y.Z: {version!r}")
+
+          print(f"version={version}")
+          print(f"draft_id={draft['id']}")
+          print(f"drafted={drafted}")
+          PY
+
+      - name: Point the draft release at the resolved version
+        # Only fires when a manual label changed the number. The draft's tag is what gets published, so
+        # leaving it disagreeing with the tag this workflow creates would publish a release pointing at
+        # a tag that does not exist.
+        if: steps.version.outputs.version != steps.version.outputs.drafted
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          V="v${{ steps.version.outputs.version }}"
+          echo "Retagging the draft: v${{ steps.version.outputs.drafted }} -> $V"
+          gh api -X PATCH "repos/${{ github.repository }}/releases/${{ steps.version.outputs.draft_id }}" \
+            -f tag_name="$V" -f name="$V"
+
+      - name: Write the version into the files that carry it
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          python - <<'PY'
+          import datetime, os, pathlib, re, sys
+
+          version = os.environ["VERSION"]
+          if not re.fullmatch(r"\d+\.\d+\.\d+", version):
+              sys.exit(f"refusing to write a version that is not X.Y.Z: {version!r}")
+
+          # Every substitution is asserted rather than assumed. A silent no-op here would produce a bump
+          # pull request that changes nothing, tag a version the package does not report, and only fail
+          # much later in publish.yml -- after the release notes are already public.
+          def sub(path, pattern, replacement):
+              file = pathlib.Path(path)
+              text = file.read_text(encoding="utf-8")
+              new, count = re.subn(pattern, replacement, text, count=1, flags=re.M)
+              if count != 1:
+                  sys.exit(f"{path}: pattern {pattern!r} matched {count} times, expected exactly 1")
+              file.write_text(new, encoding="utf-8")
+              print(f"{path}: {pattern!r} -> {replacement!r}")
+
+          # pyproject.toml carries no literal version: [tool.hatch.version] reads this one.
+          sub("src/journalfig/__init__.py", r'^__version__ = "[^"]+"', f'__version__ = "{version}"')
+          sub("CITATION.cff", r"^version: .+", f"version: {version}")
+          sub("CITATION.cff", r"^date-released: .+", f"date-released: {datetime.date.today()}")
+          PY
+
+      - name: Confirm the package reports the new version
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          pip install -e . --quiet
+          python -c "
+          import os, journalfig
+          want = os.environ['VERSION']
+          assert journalfig.__version__ == want, (journalfig.__version__, want)
+          print('journalfig reports', want)
+          "
+
+      - uses: peter-evans/create-pull-request@v7
+        with:
+          commit-message: "release: ${{ steps.version.outputs.version }}"
+          title: "release: ${{ steps.version.outputs.version }}"
+          body: |
+            Opened by [version-bump.yml](.github/workflows/version-bump.yml).
+
+            Release Drafter resolved **${{ steps.version.outputs.version }}** from the labels on the pull
+            requests merged since the last release. Merging this tags `v${{ steps.version.outputs.version }}`
+            on `main`; publishing the draft release then ships it to PyPI.
+
+            If this number looks wrong, the labels are wrong -- fix them on the merged pull requests and
+            re-run the workflow rather than editing this branch by hand.
+          branch: release/v${{ steps.version.outputs.version }}
+          delete-branch: true
+          labels: skip-changelog
+
+  tag-release:
+    # Fires when the bump pull request above is merged. Matching on the title is what amorphouspy does;
+    # it is why the commit-message and title above must stay in sync with this prefix.
+    if: |
+      github.event.pull_request.merged == true &&
+      startsWith(github.event.pull_request.title, 'release: ')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Tag the merged bump commit
+        run: |
+          set -euo pipefail
+          VERSION=$(grep -oP '__version__ = "\K[^"]+' src/journalfig/__init__.py)
+          echo "Tagging v$VERSION"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag -a "v$VERSION" -m "v$VERSION"
+          git push origin "v$VERSION"
