@@ -128,6 +128,8 @@ both at once. numpy is not a runtime dependency.
   matplotlib `vert`/`orientation` rename.
 - An MkDocs site carries a guide, the full specification tables, and an API reference generated from the
   docstrings.
+- `mypy --strict` runs over `src/journalfig`, with no `ignore_missing_imports`. The package ships
+  `py.typed`, and this is what makes that marker a verified claim rather than an author's promise.
 
 **No test can tell you whether a number is right.** The suite verifies that an entry is complete and
 self-consistent, never that it matches the publisher's document. That stays a human review against the
@@ -138,10 +140,6 @@ cited source, which is why every `Source` carries a retrieval date.
 - `jf.use("aps", usetex=True)` needs matplotlib >= 3.10 on TeX installations without a Type 1 entry for
   `mathptmx`; 3.8 and 3.9 raise `LookupError` at save time. CI runners carry no LaTeX, so no job covers
   this -- it was found by running the suite against the floor by hand.
-- **`py.typed` ships, but no type checker runs anywhere.** mypy was set up during development and taken
-  out again before release, so the configuration, the CI job and the dev dependency are all absent by
-  choice. Downstream checkers therefore read annotations that nothing here verifies -- treat them as an
-  author's promise, not a tested fact.
 - Elsevier's 6 pt sub/superscript floor and matplotlib's 0.7x mathtext shrink mean the theme's own 7 pt
   base fails `check()` the moment a subscript appears (7 x 0.7 = 4.9 pt). `jf.use("elsevier",
   base_size=8.6)` is the fix. Nature's equivalent case is genuinely unsatisfiable: 7 pt is their maximum,

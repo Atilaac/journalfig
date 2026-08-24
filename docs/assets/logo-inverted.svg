@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  journalfig — a figure being measured. INVERTED variant.
+
+  Light strokes with no media query, because Material's header bar is the primary colour in *both*
+  schemes: a header logo that followed prefers-color-scheme would go near-black on it in light mode,
+  which measured 2.24:1 against the header and was invisible. logo.svg is the adaptive file, used as
+  the favicon and in the README where the background really does follow the reader's theme.
+
+  The panel is one column of a printed journal page; the dimension line beneath it is the engineering
+  convention for a stated width, which is what this package exists to get right.
+
+-->
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="450" viewBox="0 0 400 450"
+     role="img" aria-label="journalfig">
+  <title>journalfig</title>
+  <style>
+    .outline { stroke: #e8edf2; }
+    .blue    { stroke: #6fc2f0; }
+    .orange  { stroke: #ff8a4c; }
+  </style>
+  <g transform="translate(40,41)">
+    <rect x="20" y="20" width="280" height="280" rx="24" ry="24"
+          class="outline" fill="none" stroke-width="10" stroke-linejoin="round"/>
+    <line x1="60" y1="240" x2="260" y2="240"
+          class="outline" stroke-width="6" stroke-linecap="round"/>
+    <path d="m 60,235 c 15,0 25,-10 35,-40 13,-40 23,-105 45,-105 22,0 32,65 45,105 10,30 20,40 35,40"
+          class="blue" fill="none" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="m 78,238 c 17,0 30,-13 44,-43 16,-37 28,-77 50,-77 22,0 34,40 50,77 10,23 20,37 33,41"
+          class="orange" fill="none" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"
+          stroke-dasharray="20, 16"/>
+    <g class="outline" stroke-width="6" stroke-linecap="round">
+      <line x1="30" y1="330" x2="290" y2="330"/>
+      <path d="m 30,330 20,-15 m -20,15 20,15" fill="none"/>
+      <path d="m 290,330 -20,-15 m 20,15 -20,15" fill="none"/>
+      <line x1="30" y1="310" x2="30" y2="350"/>
+      <line x1="290" y1="310" x2="290" y2="350"/>
+    </g>
+  </g>
+</svg>

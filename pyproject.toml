@@ -42,6 +42,7 @@ journalfig = "journalfig._cli:main"
 
 [project.urls]
 Homepage = "https://github.com/Atilaac/journalfig"
+Documentation = "https://atilaac.github.io/journalfig/"
 Repository = "https://github.com/Atilaac/journalfig"
 Issues = "https://github.com/Atilaac/journalfig/issues"
 Changelog = "https://github.com/Atilaac/journalfig/releases"
@@ -60,6 +61,7 @@ examples = ["cmcrameri>=1.9"]
 dev = [
     "journalfig[test,docs,examples]",
     "ruff>=0.4",
+    "mypy>=1.11",
     "pre-commit>=3",
 ]
 
@@ -100,6 +102,15 @@ select = ["E", "F", "I", "N", "UP", "B", "W", "PLW1514"]
 
 [tool.ruff.lint.pydocstyle]
 convention = "google"
+
+[tool.mypy]
+# The package ships py.typed, which tells downstream checkers to trust these annotations. Without a
+# checker of our own that was an author's promise; strict mode makes it a verified one.
+# matplotlib ships py.typed too, so no ignore_missing_imports is needed -- if that stops being true,
+# fix the import rather than silencing it.
+files = ["src/journalfig"]
+python_version = "3.12"
+strict = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests", "src/journalfig"]

@@ -23,6 +23,9 @@ jobs:
       # guards them too -- the data generator was one of the sites that broke the Windows matrix.
       - run: ruff check src/ tests/ demo.py conftest.py examples/
       - run: ruff format --check --diff src/ tests/ demo.py conftest.py examples/
+      # The package ships py.typed. Without this the annotations downstream checkers are told to trust
+      # would be unverified. Scoped to src/ by [tool.mypy]: that is exactly what py.typed promises.
+      - run: mypy
 
   test:
     # Font resolution and figure-size rounding are both platform-dependent, and they are exactly what

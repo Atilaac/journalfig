@@ -4,10 +4,18 @@
 [![PyPI](https://img.shields.io/pypi/v/journalfig.svg)](https://pypi.org/project/journalfig/)
 [![Python](https://img.shields.io/pypi/pyversions/journalfig.svg)](https://pypi.org/project/journalfig/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Docs](https://img.shields.io/badge/docs-atilaac.github.io%2Fjournalfig-2b8cc4.svg)](https://atilaac.github.io/journalfig/)
+
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/assets/logo-inverted.svg">
+    <img src="docs/assets/logo.svg" alt="journalfig logo" width="320">
+  </picture>
+</p>
 
 Publication-ready matplotlib themes for **Nature**, **APS** (PRB/PRL), **Elsevier** (Acta Materialia, JNCS), **IOP**, **AIP**, **ACS**, **RSC**, **IEEE**, **PLOS**, **Wiley**, **PNAS**, and **Science**. Import once, and retarget a figure to a different journal by changing one string.
 
-Every number in the themes is traceable to a publisher document — see [Sources](#sources). Nothing is guessed; the two values that had to be derived are marked as such.
+Every number in the themes is traceable to a publisher document — see [Sources](#sources). Nothing is guessed; the six values that had to be derived are marked `DERIVED` beside the number, four of them unit conversions of figures PLOS publishes in pixels and the other two the APS 1.5- and 2-column widths.
 
 ## Install
 
