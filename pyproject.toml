@@ -51,7 +51,9 @@ Changelog = "https://github.com/Atilaac/journalfig/releases"
 # numpy is not used by the package itself -- only by demo.py, which CI smoke-runs. scipy is used by the
 # curve-fitting example notebook, which CI executes. Neither is a runtime dependency of the package.
 test = ["pytest>=7", "coverage[toml]>=7", "pillow>=9", "numpy>=1.24", "nbval>=0.11", "ipykernel>=6", "pytest-mpl>=0.17", "scipy>=1.10", "cmcrameri>=1.9"]
-docs = ["mkdocs>=1.6", "mkdocs-material>=9", "mkdocstrings[python]>=0.25"]
+# mkdocs-jupyter renders examples/*.ipynb as the Tutorials section, reached through the
+# docs/tutorials symlink. It must be declared here or the docs CI job fails on a missing plugin.
+docs = ["mkdocs>=1.6", "mkdocs-material>=9", "mkdocstrings[python]>=0.25", "mkdocs-jupyter>=0.24"]
 # Scientific colour maps (Crameri). Optional: the heatmap notebook falls back to matplotlib's
 # built-ins when it is absent, and the package itself never imports it.
 examples = ["cmcrameri>=1.9"]

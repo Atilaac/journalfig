@@ -23,14 +23,53 @@ theme:
         icon: material/brightness-4
         name: Switch to light mode
 
+# Both of these are warnings mkdocs ignores by default; --strict turns them into errors.
+validation:
+  nav:
+    # A ninth notebook dropped into examples/ appears under docs/tutorials via the symlink but stays
+    # invisible unless it is added to nav below. Default for this is "info", which --strict ignores.
+    omitted_files: warn
+  links:
+    # mkdocs --strict already fails on a link to a missing page, but not on a link to a missing *heading*
+    # within a page that exists. figure-design.md cross-references six headings in guide.md and index.md.
+    anchors: warn
+
 nav:
   - Home: index.md
   - Guide: guide.md
+  - Figure design: figure-design.md
+  - Tutorials:
+      - tutorials/00_getting_started.ipynb
+      - tutorials/01_line_plots.ipynb
+      - tutorials/02_scatter_plots.ipynb
+      - tutorials/03_histograms.ipynb
+      - tutorials/04_heatmaps.ipynb
+      - tutorials/05_multipanel_figures.ipynb
+      - tutorials/06_reading_and_fitting.ipynb
+      - tutorials/07_boxplots.ipynb
   - Specifications: specifications.md
   - API reference: api.md
 
+# docs/tutorials is a symlink to ../examples, so the notebooks have exactly one home: they are executed
+# by `pytest --nbval-lax examples/` and rendered here from the same files. Copying them into docs/ would
+# create a second set that goes stale silently.
+# __pycache__ appears under examples/data/ after the data generator runs and must not reach the site.
+exclude_docs: |
+  tutorials/data/__pycache__/
+
 plugins:
   - search
+  - mkdocs-jupyter:
+      # Only notebooks. The default also renders *.py, which would turn examples/data/make_oscillation.py
+      # -- a data generator, not a tutorial -- into a page.
+      include: ["*.ipynb"]
+      # The notebooks ship executed and CI re-runs them with nbval; re-executing at docs build time would
+      # make the published output differ from the committed one and slow the build for no gain.
+      execute: false
+      # include_source copies each .ipynb beside its page and sets page.nb_url, but only a custom theme
+      # template renders a link to it -- Material does not. It would add 3.2 MB to the site that nothing
+      # links to, so the notebooks are offered from the repository instead.
+      include_source: false
   - mkdocstrings:
       handlers:
         python:

@@ -69,5 +69,10 @@ curve. Use `jf.MARKER_CYCLE` when you want them.
 ## Where to go next
 
 - The [guide](guide.md) covers multi-panel layouts, notebook setup, and the six behaviours that bite.
+- [Figure design](figure-design.md) is the other half: twenty-five rules for a figure worth submitting,
+  each one saying whether the package handles it, whether `check()` can see it, or whether it is yours.
+- The [tutorials](tutorials/00_getting_started.ipynb) are eight executed notebooks — line plots, scatter,
+  histograms, heatmaps, multi-panel layouts, fitting real data, box plots. They live in `examples/` in the
+  repository, so you can clone and run them; CI executes every cell, so they cannot go stale.
 - The [specifications page](specifications.md) lists the publisher documents behind every number.
 - The [API reference](api.md) is generated from the docstrings.
