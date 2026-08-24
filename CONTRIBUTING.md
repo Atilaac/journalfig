@@ -96,11 +96,20 @@ these tests still run and still catch exceptions — they just compare nothing.
 ## Types and the dependency floor
 
 The package ships `py.typed`, which tells downstream type checkers to trust its annotations, so keep every
-public function annotated. **No type checker runs in CI**, which makes that a promise on the author rather
-than a verified one: a wrong annotation will reach a release, and the person who finds it will be a user
-running their own checker. Run one locally if you change a signature. The one `# type: ignore` in the
-codebase is on `plt.subplot_mosaic`, where a union argument cannot be matched against matplotlib's
-overload set; it carries a comment saying so.
+public function annotated. **`mypy --strict` runs in the lint job**, over `src/journalfig` only — that is
+exactly the surface `py.typed` makes a promise about. Run it locally with a bare `mypy`; the scope comes
+from `[tool.mypy]` in `pyproject.toml`.
+
+There is no `ignore_missing_imports`, deliberately: matplotlib ships `py.typed` of its own, so a missing
+import means something to fix rather than silence. `warn_unused_ignores` is on, so a `# type: ignore` that
+stops being necessary fails the build instead of accumulating. The single suppression in the codebase is
+on `plt.subplot_mosaic`, where a union argument cannot be matched against matplotlib's overload set, and
+it is still load-bearing.
+
+Two patterns strict mode rules out, in case you reach for them: unpacking a dict into a dataclass
+(`ThemeStyle(**_MEDIUM)`) defeats checking, so partial styles are `ThemeStyle` instances composed with
+`dataclasses.replace`; and re-exporting a name through a module that merely imported it is rejected, so
+import from where a symbol is defined.
 
 `pyproject.toml` claims `matplotlib>=3.8` and `python>=3.12`, and a `minimum-versions` CI job installs
 exactly that so the floor is tested rather than asserted. If you use a matplotlib feature newer than 3.8,

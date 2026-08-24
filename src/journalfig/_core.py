@@ -139,7 +139,9 @@ def register() -> None:
         # overlay rather than offered to matplotlib as a style of its own.
         if path.name.startswith("_"):
             continue
-        merged = dict(base)
+        # RcParams.copy() rather than dict(base): matplotlib's style library holds RcParams, and a plain
+        # dict works only because nothing downcasts it.
+        merged = base.copy()
         merged.update(rc_params_from_file(path, use_default_template=False))
         mplstyle.library[path.stem] = merged
     mplstyle.available[:] = sorted(mplstyle.library)

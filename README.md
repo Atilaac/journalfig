@@ -4,6 +4,7 @@
 [![PyPI](https://img.shields.io/pypi/v/journalfig.svg)](https://pypi.org/project/journalfig/)
 [![Python](https://img.shields.io/pypi/pyversions/journalfig.svg)](https://pypi.org/project/journalfig/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Docs](https://img.shields.io/badge/docs-atilaac.github.io%2Fjournalfig-0072B2.svg)](https://atilaac.github.io/journalfig/)
 
 Publication-ready matplotlib themes for **Nature**, **APS** (PRB/PRL), **Elsevier** (Acta Materialia, JNCS), **IOP**, **AIP**, **ACS**, **RSC**, **IEEE**, **PLOS**, **Wiley**, **PNAS**, and **Science**. Import once, and retarget a figure to a different journal by changing one string.
 

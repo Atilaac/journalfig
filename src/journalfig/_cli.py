@@ -29,8 +29,12 @@ matplotlib.use("Agg")  # noqa: E402  -- before pyplot, so no target can open a w
 import matplotlib.pyplot as plt  # noqa: E402
 from matplotlib.figure import Figure  # noqa: E402
 
-from ._core import MM_PER_INCH, JournalFigWarning, Violation, check  # noqa: E402
-from ._specs import JOURNALS, SPECS  # noqa: E402
+from ._core import JournalFigWarning, Violation, check  # noqa: E402
+from ._specs import (  # noqa: E402
+    JOURNALS,
+    MM_PER_INCH,  # noqa: E402
+    SPECS,
+)
 
 #: Returned when the target could not be loaded at all, as distinct from loading and failing the check.
 EXIT_ERROR = 2

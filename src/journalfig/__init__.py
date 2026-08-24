@@ -15,7 +15,6 @@ Author: Achraf Atila (achraf.atila@bam.de)
 """
 
 from ._core import (
-    GOLDEN,
     VECTOR_ELEMENT_LIMIT,
     FontStatus,
     JournalFigWarning,
@@ -39,6 +38,7 @@ from ._core import (
 from ._specs import (
     COLOR_CYCLE,
     COLORS,
+    GOLDEN,
     JOURNALS,
     LINESTYLE_CYCLE,
     MARKER_CYCLE,
